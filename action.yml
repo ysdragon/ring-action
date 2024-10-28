@@ -1,0 +1,21 @@
+name: 'Build Ring Project'
+description: 'A GitHub Action for building Ring projects within a Docker container.'
+author: 'ysdragon'
+inputs:
+  args:
+    description: 'Optional command line flags for the Ring compiler. Use "-static" for static builds for example.'
+    required: false
+    default: ''
+  file:
+    description: 'The Ring file to compile.'
+    required: true
+  version:
+    description: 'Specify the version of the Ring compiler to use (commit ID, tag, branch, or hash).'
+    required: false
+    default: 'v1.21.2'
+branding:
+  color: 'blue'
+  icon: 'package'
+runs:
+  using: 'docker'
+  image: 'docker://quay.io/ydrag0n/ring:latest'

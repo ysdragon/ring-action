@@ -2,13 +2,16 @@ name: 'Build Ring Project'
 description: 'A GitHub Action for building Ring projects within a Docker container.'
 author: 'ysdragon'
 inputs:
+  file:
+    description: 'The Ring file to compile.'
+    required: true
   args:
     description: 'Optional command line flags for the Ring compiler. Use "-static" for static builds for example.'
     required: false
     default: ''
-  file:
-    description: 'The Ring file to compile.'
-    required: true
+  ring_packages:
+    description: 'Optional command to install specified packages from RingPM.'
+    required: false
   version:
     description: 'Specify the version of the Ring compiler to use (commit ID, tag, branch, or hash).'
     required: false

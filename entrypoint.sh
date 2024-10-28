@@ -36,5 +36,16 @@ if [ "$INPUT_VERSION" != "v1.21.2" ]; then
     popd
 fi
 
+# Check if the INPUT_RING_PACKAGE is not empty
+if [ "$INPUT_RING_PACKAGES" != "" ]; then
+    # Split the input string into an array of packages
+    IFS=' ' read -r -a packages <<< "$INPUT_RING_PACKAGES"
+    
+    # Loop through each package and install it
+    for package in "${packages[@]}"; do
+        ringpm install "$package"
+    done
+fi
+
 # Execute ring2exe with the provided arguments and input file
 ring2exe $INPUT_ARGS $INPUT_FILE

@@ -52,6 +52,9 @@ else
     # Execute ring with the provided arguments and input file
     output=$(ring $INPUT_ARGS $INPUT_FILE)
 
+    # Print the output
+    echo "$output"
+    
     # Check if the output contains the word "Error"
     if [[ "$output" == *"Error"* ]]; then
         exit 1

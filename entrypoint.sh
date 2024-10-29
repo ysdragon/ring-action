@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Exit on error, print commands being executed
-set -ex
-
 # Check if we need to switch Ring versions
 if [ "$INPUT_VERSION" != "v1.21.2" ]; then
     # Navigate to the ring directory

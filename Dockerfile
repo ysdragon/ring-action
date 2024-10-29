@@ -65,6 +65,7 @@ RUN mkdir -p /opt/ring
 WORKDIR /opt/ring
 RUN git clone --depth 1 --branch v1.21.2 https://github.com/ring-lang/ring . \
     && find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} + \
+    && find extensions/ringqt -name "*.sh" -exec sed -i 's/\bmake\b/make -j$(nproc)/g' {} + \
     && cd build \
     && bash buildgcc.sh
 

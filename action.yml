@@ -5,6 +5,10 @@ inputs:
   file:
     description: 'The Ring file to compile.'
     required: true
+  output_exe:
+    description: 'This can be set to true to use Ring2EXE (to output an executable file).'
+    required: false
+    default: 'false'
   args:
     description: 'Optional command line flags for the Ring compiler. Use "-static" for static builds for example.'
     required: false

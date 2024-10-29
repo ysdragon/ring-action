@@ -7,6 +7,10 @@ An experimental GitHub Action that compiles a Ring project.
 ### `file` (required)
 - **Description**: The path to the Ring file to build.
 
+### `output_exe` (optional)
+- **Description**: This can be set to 'true' to use Ring2EXE *(to output an executable file)*.
+- **Default**: `false`
+
 ### `args` (optional)
 - **Description**: Additional arguments to pass to Ring2EXE.
 
@@ -22,7 +26,7 @@ An experimental GitHub Action that compiles a Ring project.
 Here’s an example of how to use this action in your workflow:
 
 ```yaml
-uses: ysdragon/ring-action@v1.0.0
+uses: ysdragon/ring-action@v1.0.1
 with:
   file: "program.ring"
 ```

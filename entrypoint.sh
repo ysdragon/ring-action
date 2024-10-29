@@ -36,7 +36,7 @@ if [ "$INPUT_VERSION" != "v1.21.2" ]; then
     popd
 fi
 
-# Check if the INPUT_RING_PACKAGE is not empty
+# Check if the INPUT_RING_PACKAGES is not empty
 if [ "$INPUT_RING_PACKAGES" != "" ]; then
     # Split the input string into an array of packages
     IFS=' ' read -r -a packages <<< "$INPUT_RING_PACKAGES"
@@ -47,5 +47,11 @@ if [ "$INPUT_RING_PACKAGES" != "" ]; then
     done
 fi
 
-# Execute ring2exe with the provided arguments and input file
-ring2exe $INPUT_ARGS $INPUT_FILE
+# Check if the INPUT_OUTPUT_EXE is 'true'
+if [ "$INPUT_OUTPUT_EXE" = "true" ]; then
+    # Execute ring2exe with the provided arguments and input file
+    ring2exe $INPUT_ARGS $INPUT_FILE
+else
+    # Execute ring with the provided arguments and input file
+    ring $INPUT_ARGS $INPUT_FILE
+fi

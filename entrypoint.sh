@@ -53,5 +53,10 @@ if [ "$INPUT_OUTPUT_EXE" = "true" ]; then
     ring2exe $INPUT_ARGS $INPUT_FILE
 else
     # Execute ring with the provided arguments and input file
-    ring $INPUT_ARGS $INPUT_FILE
+    output=$(ring $INPUT_ARGS $INPUT_FILE)
+
+    # Check if the output contains the word "Error"
+    if [[ "$output" == *"Error"* ]]; then
+        exit 1
+    fi
 fi

@@ -12,7 +12,7 @@ An experimental GitHub Action that compiles a Ring project.
 - **Default**: `false`
 
 ### `args` (optional)
-- **Description**: Additional arguments to pass to Ring2EXE.
+- **Description**: Additional arguments to pass to Ring or Ring2EXE if `output_exe` is set to 'true'.
 
 ### `ring_packages` (optional)
 - **Description**: Specifies the packages to install from RingPM.

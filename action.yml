@@ -1,28 +1,120 @@
 name: 'Build Ring Project'
-description: 'A GitHub Action for building Ring projects within a Docker container.'
+description: 'A GitHub Action for building Ring projects.'
 author: 'ysdragon'
+
 inputs:
   file:
-    description: 'The Ring file to compile.'
+    description: 'The Ring file to compile'
     required: true
   output_exe:
-    description: 'This can be set to true to use Ring2EXE (to output an executable file).'
+    description: 'This can be set to true to use Ring2EXE (to output an executable file)'
     required: false
     default: 'false'
   args:
-    description: 'Optional command line flags for the Ring compiler. Use "-static" for static builds for example.'
+    description: 'Optional command line flags for the Ring compiler or Ring2EXE'
     required: false
     default: ''
   ring_packages:
-    description: 'Optional command to install specified packages from RingPM.'
+    description: 'Optional command to install specified packages from RingPM'
     required: false
   version:
-    description: 'Specify the version of the Ring compiler to use (commit ID, tag, branch, or hash).'
+    description: 'Specify the version of the Ring compiler to use (commit ID, tag, branch, or hash)'
     required: false
     default: 'v1.21.2'
+
 branding:
   color: 'blue'
   icon: 'package'
+
 runs:
-  using: 'docker'
-  image: 'docker://quay.io/ydrag0n/ring:latest'
+  using: 'composite'
+  steps:
+    - name: Set up environment variables
+      shell: bash
+      run: |
+        echo "RING_VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+        echo "RING_FILE=${{ inputs.file }}" >> $GITHUB_ENV
+        echo "RING_ARGS=${{ inputs.args }}" >> $GITHUB_ENV
+
+    - name: Install 7zip (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        choco install 7zip -y
+
+    - name: Set up Ring (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        # Create temp directory
+        Write-Host "Creating temporary directory..."
+        $downloadDir = "C:\RingTemp"
+        New-Item -ItemType Directory -Force -Path $downloadDir
+        cd $downloadDir
+        
+        # Download Ring installer
+        $version = "${{ inputs.version }}"
+        $cleanVersion = $version -replace '^v', ''
+        $installerUrl = "https://github.com/ring-lang/ring/releases/download/$version/Ring_${cleanVersion}_Windows_64bit.exe"
+        Write-Host "Downloading Ring from: $installerUrl"
+        
+        try {
+            $ProgressPreference = 'SilentlyContinue'
+            Invoke-WebRequest -Uri $installerUrl -OutFile "ring_installer.exe" -UseBasicParsing
+            
+            # Extract quietly
+            Write-Host "Extracting Ring installer..."
+            & 7z x "ring_installer.exe" -o"C:\" -y -bso0 -bsp0
+                        
+            # Add Ring to PATH
+            Write-Host "Adding Ring to PATH..."
+            echo "C:\ring\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+            
+            # Test Ring installation
+            $env:Path = "C:\ring\bin;" + $env:Path
+            Write-Host "Testing Ring installation..."
+            
+            # Install packages if specified
+            if ("${{ inputs.ring_packages }}" -ne "") {
+                Write-Host "Installing specified packages..."
+                $packages = "${{ inputs.ring_packages }}".Split(" ")
+                foreach ($package in $packages) {
+                    Write-Host "Installing package: $package"
+                    & "C:\ring\bin\ringpm" install $package
+                }
+            }
+                      
+            Write-Host "Ring setup completed successfully"
+            
+        } catch {
+            Write-Host "Error during Ring setup: $_"
+            Write-Host "Stack trace: $($_.ScriptStackTrace)"
+            exit 1
+        }
+        
+    - name: Set up Ring (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        # Use the existing Docker container for Linux
+        docker pull quay.io/ydrag0n/ring:latest
+        
+    - name: Build project (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        if ("${{ inputs.output_exe }}" -eq "true") {
+          ring2exe ${{ inputs.args }} ${{ inputs.file }}
+        } else {
+          $output = ring ${{ inputs.args }} ${{ inputs.file }}
+          Write-Output $output
+          if ($output -match "Error") {
+            exit 1
+          }
+        }
+
+    - name: Build project (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+          docker run --rm -v "$(pwd):/app" -e INPUT_VERSION="${{ inputs.version }}" -e INPUT_ARGS="${{ inputs.args }}" -e INPUT_RING_PACKAGES="${{ inputs.ring_packages }}" -e INPUT_OUTPUT_EXE="${{ inputs.output_exe }}" -e INPUT_FILE="${{ inputs.file }}" quay.io/ydrag0n/ring:latest

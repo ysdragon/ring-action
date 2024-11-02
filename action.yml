@@ -91,14 +91,53 @@ runs:
             Write-Host "Stack trace: $($_.ScriptStackTrace)"
             exit 1
         }
+
+    - name: Set up Ring (macOS)
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        set -x
+
+        # Clone Ring repository
+        git clone --depth 1 --branch ${{ inputs.version }} https://github.com/ring-lang/ring $HOME/ring
+        cd $HOME/ring
         
+        # Install dependencies
+        cd build
+        chmod +x installdepmac.sh
+        ./installdepmac.sh > /dev/null 2>&1
+        
+        # Build Ring
+        chmod +x buildclang.sh
+        ./buildclang.sh > /dev/null 2>&1
+
+        # Debug
+        ls $HOME/ring/lib/
+
+        # Add Ring to PATH
+        echo "$HOME/ring/bin" >> $GITHUB_PATH
+        export PATH="$HOME/ring/bin:$PATH"
+        export LD_LIBRARY_PATH="$HOME/ring/lib:$DYLD_LIBRARY_PATH"
+        export DYLD_LIBRARY_PATH="$HOME/ring/lib:$DYLD_LIBRARY_PATH"
+
+        # Install packages if specified
+        if [ ! -z "${{ inputs.ring_packages }}" ]; then
+            echo "Installing specified packages..."
+            for package in ${{ inputs.ring_packages }}; do
+                echo "Installing package: ${package}"
+                ringpm install "${package}"
+            done
+        fi
+        
+        echo "Ring setup completed successfully"
+
     - name: Set up Ring (Linux)
       if: runner.os == 'Linux'
       shell: bash
       run: |
         # Use the existing Docker container for Linux
         docker pull quay.io/ydrag0n/ring:latest
-        
+
     - name: Build project (Windows)
       if: runner.os == 'Windows'
       shell: pwsh
@@ -112,6 +151,20 @@ runs:
             exit 1
           }
         }
+
+    - name: Build project (macOS)
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        if [ "${{ inputs.output_exe }}" = "true" ]; then
+          ring2exe ${{ inputs.args }} ${{ inputs.file }}
+        else
+          output=$(ring ${{ inputs.args }} ${{ inputs.file }})
+          echo "$output"
+          if [[ "$output" == *"Error"* ]]; then
+            exit 1
+          fi
+        fi
 
     - name: Build project (Linux)
       if: runner.os == 'Linux'

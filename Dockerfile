@@ -1,5 +1,5 @@
-# Use Ubuntu 24.04 (noble) as the base image
-FROM ubuntu:noble
+# Use Debian latest as the base image
+FROM debian:latest
 
 # Set environment variables to reduce interaction during package installation
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y -qq --no-install-recommends \
     git \
     unixodbc \
     unixodbc-dev \
-    libmysqlclient-dev \
+    libmariadb-dev-compat \
     libpq-dev \
     libcurl4-gnutls-dev \
     libssl-dev \

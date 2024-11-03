@@ -1,17 +1,14 @@
 name: Ring Docker Image CI
 
-# on:
-#   push:
-#     branches: [ "main" ]
-#   pull_request:
-#     branches: [ "main" ]
 on:
+  push:
+    branches: [ "main" ]
   release:
     types: [published]
     
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,7 +27,7 @@ jobs:
         with:
           context: .
           file: Dockerfile
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: quay.io/ydrag0n/ring:latest,quay.io/ydrag0n/ring:${{ github.ref_name }}
           outputs: type=image,name=target

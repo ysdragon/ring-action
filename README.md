@@ -26,6 +26,7 @@ A GitHub Action that compiles [Ring](https://ring-lang.net/) Programming Languag
 | Linux | x64 | ✅ | Full support |
 | Linux | x86 | ❌ | Not supported |
 | Linux | ARM64 | ❌ | Not supported |
+| Linux | RISCV64 | ❌ | Not supported |
 | macOS | Intel | ✅ | Full support |
 | macOS | Apple Silicon | ❌ | Not supported |
 | Windows | x64 | ✅ | Pre-built binaries only |

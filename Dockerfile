@@ -9,6 +9,11 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # Install necessary packages
 RUN apt-get update && apt-get install -y -qq --no-install-recommends \
     build-essential \
+    wget \
+    unzip \
+    cmake \
+    meson \
+    ninja-build \
     ca-certificates \
     git \
     unixodbc \
@@ -58,14 +63,62 @@ RUN apt-get update && apt-get install -y -qq --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/cache/apt/*
 
+# Create /opt/raylib directory
+RUN mkdir -p /opt/raylib
+
+# Clone and build raylib
+WORKDIR /opt/raylib
+RUN wget https://github.com/raysan5/raylib/archive/refs/tags/5.0.zip \
+    && unzip 5.0.zip \
+    && cd raylib-5.0 \
+    && cmake -B build -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -GNinja \
+    && cmake --build build \
+    && cmake --install build
+
+# Create /opt/tilengine directory
+RUN mkdir -p /opt/tilengine
+
+# Clone and build tilengine
+WORKDIR /opt/tilengine
+RUN git clone --depth 1 https://github.com/megamarc/Tilengine . \
+    && cd src \
+    && make -j$(nproc)  \
+    && cd ../ \
+    && ./install \
+    && mv /usr/lib/libTilengine.so /usr/lib/libtilengine.so \
+    && mv /usr/include/Tilengine.h /usr/include/tilengine.h
+
+# Create /opt/libui-ng directory
+RUN mkdir -p /opt/libui-ng
+
+# Clone and build libui-ng
+WORKDIR /opt/libui-ng
+RUN git clone --depth 1 https://github.com/libui-ng/libui-ng . \
+    && meson setup build \
+    && ninja -C build  \
+    && ninja -C build install
+
+# Clean up
+RUN rm -rf /opt/raylib /opt/tilengine /opt/libui-ng
+
 # Create /opt/ring directory
 RUN mkdir -p /opt/ring
 
 # Clone and build Ring
 WORKDIR /opt/ring
-RUN git clone --depth 1 --branch v1.21.2 https://github.com/ring-lang/ring . \
-    && find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} + \
-    && find extensions/ringqt -name "*.sh" -exec sed -i 's/\bmake\b/make -j$(nproc)/g' {} + \
+RUN git clone --depth 1 --branch v1.21.2 https://github.com/ring-lang/ring . 
+RUN find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} +
+RUN find extensions/ringqt -name "*.sh" -exec sed -i 's/\bmake\b/make -j$(nproc)/g' {} +
+
+RUN rm -rf extensions/ringraylib5/src/inux_raylib-5 \
+    && rm -rf extensions/ringtilengine/linux_tilengine \
+    && rm -rf extensions/ringlibui/linux \
+    && sed -i 's/ -I linux_raylib-5\/include//g; s/ -L $PWD\/linux_raylib-5\/lib//g' extensions/ringraylib5/src/buildgcc.sh \
+    && sed -i '/extensions\/ringraylib5\/src\/linux/d' bin/install.sh \
+    && sed -i 's/ -I linux_tilengine\/include//g; s/ -L $PWD\/linux_tilengine\/lib//g' extensions/ringtilengine/buildgcc.sh \
+    && sed -i '/extensions\/ringtilengine/d' bin/install.sh \
+    && sed -i 's/ -I linux//g; s/ -L \$PWD\/linux//g' extensions/ringlibui/buildgcc.sh \
+    && sed -i '/extensions\/ringlibui\/linux/d' bin/install.sh \
     && cd build \
     && bash buildgcc.sh
 

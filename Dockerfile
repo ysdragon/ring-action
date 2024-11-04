@@ -108,10 +108,14 @@ RUN mkdir -p /opt/ring
 WORKDIR /opt/ring
 RUN git clone --depth 1 --branch v1.21.2 https://github.com/ring-lang/ring . 
 
-COPY patches/pdfgen.patch .
-RUN git apply pdfgen.patch
+COPY patches/ringpdfgen.patch .
+RUN git apply ringpdfgen.patch
+
+COPY patches/ringfastpro.patch .
+RUN git apply ringfastpro.patch
 
 RUN find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} + \
+    && find . -type f -name "*.sh" -exec sed -i 's/-L \/usr\/lib\/i386-linux-gnu//g' {} + \
     && find extensions/ringqt -name "*.sh" -exec sed -i 's/\bmake\b/make -j$(nproc)/g' {} + \
     && rm -rf extensions/ringraylib5/src/inux_raylib-5 \
     && rm -rf extensions/ringtilengine/linux_tilengine \
@@ -122,6 +126,7 @@ RUN find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} + \
     && sed -i '/extensions\/ringtilengine/d' bin/install.sh \
     && sed -i 's/ -I linux//g; s/ -L \$PWD\/linux//g' extensions/ringlibui/buildgcc.sh \
     && sed -i '/extensions\/ringlibui\/linux/d' bin/install.sh \
+    && sed -i 's/-L \/usr\/local\/pgsql\/lib//g' extensions/ringpostgresql/buildgcc.sh \
     && cd build \
     && bash buildgcc.sh
 

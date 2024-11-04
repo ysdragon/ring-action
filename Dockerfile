@@ -107,10 +107,13 @@ RUN mkdir -p /opt/ring
 # Clone and build Ring
 WORKDIR /opt/ring
 RUN git clone --depth 1 --branch v1.21.2 https://github.com/ring-lang/ring . 
-RUN find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} +
-RUN find extensions/ringqt -name "*.sh" -exec sed -i 's/\bmake\b/make -j$(nproc)/g' {} +
 
-RUN rm -rf extensions/ringraylib5/src/inux_raylib-5 \
+COPY patches/pdfgen.patch .
+RUN git apply pdfgen.patch
+
+RUN find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} + \
+    && find extensions/ringqt -name "*.sh" -exec sed -i 's/\bmake\b/make -j$(nproc)/g' {} + \
+    && rm -rf extensions/ringraylib5/src/inux_raylib-5 \
     && rm -rf extensions/ringtilengine/linux_tilengine \
     && rm -rf extensions/ringlibui/linux \
     && sed -i 's/ -I linux_raylib-5\/include//g; s/ -L $PWD\/linux_raylib-5\/lib//g' extensions/ringraylib5/src/buildgcc.sh \

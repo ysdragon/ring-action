@@ -1,21 +1,21 @@
 name: 'Build Ring Project'
-description: 'A GitHub Action for building Ring projects.'
+description: 'A GitHub Action that compiles Ring Programming Language projects.'
 author: 'ysdragon'
 
 inputs:
   file:
-    description: 'The Ring file to compile'
+    description: 'Path to the Ring source file to build'
     required: true
   output_exe:
-    description: 'This can be set to true to use Ring2EXE (to output an executable file)'
+    description: 'Set to `true` to generate an executable using Ring2EXE'
     required: false
     default: 'false'
   args:
-    description: 'Optional command line flags for the Ring compiler or Ring2EXE'
+    description: 'Additional arguments to pass to Ring or Ring2EXE'
     required: false
     default: ''
   ring_packages:
-    description: 'Optional command to install specified packages from RingPM'
+    description: 'Space-separated list of packages to install from RingPM'
     required: false
   version:
     description: 'Specify the version of the Ring compiler to use (commit ID, tag, branch, or hash)'

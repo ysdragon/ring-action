@@ -57,6 +57,8 @@ RUN apt-get update && apt-get install -y -qq --no-install-recommends \
     libsdl2-mixer-dev \
     libsdl2-image-dev \
     libsdl2-ttf-dev \
+    libglew-dev \
+    libgl-dev \
     apache2 \
     libuv1-dev \
     && apt-get clean \
@@ -68,8 +70,8 @@ RUN mkdir -p /opt/raylib
 
 # Clone and build raylib
 WORKDIR /opt/raylib
-RUN wget https://github.com/raysan5/raylib/archive/refs/tags/5.0.zip \
-    && unzip 5.0.zip \
+RUN wget -q https://github.com/raysan5/raylib/archive/refs/tags/5.0.zip \
+    && unzip -q 5.0.zip \
     && cd raylib-5.0 \
     && cmake -B build -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -GNinja \
     && cmake --build build \
@@ -80,7 +82,7 @@ RUN mkdir -p /opt/tilengine
 
 # Clone and build tilengine
 WORKDIR /opt/tilengine
-RUN git clone --depth 1 https://github.com/megamarc/Tilengine . \
+RUN git clone --depth 1 -q https://github.com/megamarc/Tilengine . \
     && cd src \
     && make -j$(nproc)  \
     && cd ../ \
@@ -93,7 +95,7 @@ RUN mkdir -p /opt/libui-ng
 
 # Clone and build libui-ng
 WORKDIR /opt/libui-ng
-RUN git clone --depth 1 https://github.com/libui-ng/libui-ng . \
+RUN git clone --depth 1 -q https://github.com/libui-ng/libui-ng . \
     && meson setup build \
     && ninja -C build  \
     && ninja -C build install
@@ -106,7 +108,7 @@ RUN mkdir -p /opt/ring
 
 # Clone and build Ring
 WORKDIR /opt/ring
-RUN git clone --depth 1 --branch v1.21.2 https://github.com/ring-lang/ring . 
+RUN git clone --depth 1 --branch v1.21.2 -q https://github.com/ring-lang/ring . 
 
 COPY patches/ringpdfgen.patch .
 RUN git apply ringpdfgen.patch
@@ -128,8 +130,8 @@ RUN find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} + \
     && sed -i '/extensions\/ringlibui\/linux/d' bin/install.sh \
     && sed -i 's/-L \/usr\/local\/pgsql\/lib//g' extensions/ringpostgresql/buildgcc.sh \
     && cd build \
-    && bash buildgcc.sh
-
+    && bash buildgcc.sh -ring -ringallegro -ringfreeglut -ringmurmurhash -ringqt-core -ringqt-light -ringqt -ringstbimage -ringzip -ringhttplib -ringmysql -ringraylib -ringtilengine -ringthreads -ringcjson -ringinternet -ringodbc -ringrogueutil -ringpdfgen -ringconsolecolors -ringlibui -ringopengl -ringsdl -ringcurl -ringlibuv -ringopenssl -ringsockets -ringfastpro -ringpostgresql -ringsqlite -ring2exe -ringpm
+    
 # Copy the entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

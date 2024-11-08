@@ -99,7 +99,7 @@ runs:
         set -x
 
         # Clone Ring repository
-        git clone --depth 1 --branch ${{ inputs.version }} https://github.com/ring-lang/ring $HOME/ring
+        git clone --depth 1 --branch ${{ inputs.version }} -q https://github.com/ring-lang/ring $HOME/ring
         cd $HOME/ring
         
         # Install dependencies

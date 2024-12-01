@@ -20,7 +20,7 @@ inputs:
   version:
     description: 'Specify the version of the Ring compiler to use (commit ID, tag, branch, or hash)'
     required: false
-    default: 'v1.21.2'
+    default: 'v1.22'
 
 branding:
   color: 'blue'

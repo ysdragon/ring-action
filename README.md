@@ -41,7 +41,7 @@ A GitHub Action that compiles [Ring](https://ring-lang.net/) Programming Languag
 | `output_exe` | ❌ | `false` | Set to `true` to generate an executable using Ring2EXE |
 | `args` | ❌ | - | Additional arguments to pass to Ring or Ring2EXE |
 | `ring_packages` | ❌ | - | Space-separated list of packages to install from RingPM |
-| `version` | ❌ | `v1.21.2` | Ring compiler version to use |
+| `version` | ❌ | `v1.22` | Ring compiler version to use |
 
 ## Usage Examples
 

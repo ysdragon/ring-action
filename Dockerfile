@@ -108,7 +108,7 @@ RUN mkdir -p /opt/ring
 
 # Clone and build Ring
 WORKDIR /opt/ring
-RUN git clone --depth 1 --branch v1.21.2 -q https://github.com/ring-lang/ring . 
+RUN git clone --depth 1 --branch v1.22 -q https://github.com/ring-lang/ring . 
 
 COPY patches/ringpdfgen.patch .
 RUN git apply ringpdfgen.patch

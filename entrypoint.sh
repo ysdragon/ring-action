@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Check if we need to switch Ring versions
-if [ "$INPUT_VERSION" != "v1.21.2" ]; then
+if [ "$INPUT_VERSION" != "v1.22" ]; then
     # Navigate to the ring directory
     pushd /opt/ring
     

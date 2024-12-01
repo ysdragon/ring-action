@@ -6,6 +6,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8
 
+# Set the Ring release version
+ENV RING_VERSION=1.22
+
 # Install necessary packages
 RUN apt-get update && apt-get install -y -qq --no-install-recommends \
     build-essential \

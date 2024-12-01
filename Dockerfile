@@ -1,5 +1,5 @@
-# Use Debian latest as the base image
-FROM debian:latest
+# Use Ubuntu latest as the base image
+FROM ubuntu:latest
 
 # Set environment variables to reduce interaction during package installation
 ENV DEBIAN_FRONTEND=noninteractive \

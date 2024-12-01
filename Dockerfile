@@ -111,13 +111,16 @@ RUN mkdir -p /opt/ring
 
 # Clone and build Ring
 WORKDIR /opt/ring
-RUN git clone --depth 1 --branch v1.22 -q https://github.com/ring-lang/ring . 
+RUN git clone --depth 1 --branch "v$RING_VERSION" -q https://github.com/ring-lang/ring .
 
 COPY patches/ringpdfgen.patch .
-RUN git apply ringpdfgen.patch
-
 COPY patches/ringfastpro.patch .
-RUN git apply ringfastpro.patch
+
+# Check the RING_VERSION and apply patches if it's under 1.22
+RUN if [ "$(echo "$RING_VERSION < 1.22" | bc)" -eq 1 ]; then \
+        git apply ringpdfgen.patch && \
+        git apply ringfastpro.patch; \
+    fi
 
 RUN find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} + \
     && find . -type f -name "*.sh" -exec sed -i 's/-L \/usr\/lib\/i386-linux-gnu//g' {} + \

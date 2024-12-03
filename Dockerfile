@@ -137,7 +137,10 @@ RUN find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} + \
     && sed -i 's/-L \/usr\/local\/pgsql\/lib//g' extensions/ringpostgresql/buildgcc.sh \
     && cd build \
     && bash buildgcc.sh -ring -ringallegro -ringfreeglut -ringmurmurhash -ringqt-core -ringqt-light -ringqt -ringstbimage -ringzip -ringhttplib -ringmysql -ringraylib -ringtilengine -ringthreads -ringcjson -ringinternet -ringodbc -ringrogueutil -ringpdfgen -ringconsolecolors -ringlibui -ringopengl -ringsdl -ringcurl -ringlibuv -ringopenssl -ringsockets -ringfastpro -ringpostgresql -ringsqlite -ring2exe -ringpm
-    
+
+# Reduce image size by removing unnecessary directories
+RUN rm -rf applications documents marketing samples tools/{editors,formdesigner,help2wiki,ringnotepad,tryringonline}
+
 # Copy the entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

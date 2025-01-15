@@ -1,5 +1,5 @@
-# Use Ubuntu latest as the base image
-FROM ubuntu:latest
+# Use Ubuntu 24.04 (noble) as the base image
+FROM ubuntu:24.04
 
 # Set environment variables to reduce interaction during package installation
 ENV DEBIAN_FRONTEND=noninteractive \

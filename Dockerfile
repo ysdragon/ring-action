@@ -76,7 +76,7 @@ WORKDIR /opt/raylib
 RUN wget -q https://github.com/raysan5/raylib/archive/refs/tags/5.0.zip \
     && unzip -q 5.0.zip \
     && cd raylib-5.0 \
-    && cmake -B build -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -GNinja \
+    && cmake -B build -DBUILD_SHARED_LIBS=ON -DBUILD_EXAMPLES=OFF -DCMAKE_BUILD_TYPE=Release -GNinja \
     && cmake --build build \
     && cmake --install build
 

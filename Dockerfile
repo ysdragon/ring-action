@@ -125,7 +125,7 @@ RUN if [ "$(echo "$RING_VERSION < 1.22" | bc)" -eq 1 ]; then \
 RUN find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} + \
     && find . -type f -name "*.sh" -exec sed -i 's/-L \/usr\/lib\/i386-linux-gnu//g' {} + \
     && find extensions/ringqt -name "*.sh" -exec sed -i 's/\bmake\b/make -j$(nproc)/g' {} + \
-    && rm -rf extensions/ringraylib5/src/inux_raylib-5 \
+    && rm -rf extensions/ringraylib5/src/linux_raylib-5 \
     && rm -rf extensions/ringtilengine/linux_tilengine \
     && rm -rf extensions/ringlibui/linux \
     && sed -i 's/ -I linux_raylib-5\/include//g; s/ -L $PWD\/linux_raylib-5\/lib//g' extensions/ringraylib5/src/buildgcc.sh \

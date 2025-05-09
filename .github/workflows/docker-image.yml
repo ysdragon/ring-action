@@ -1,8 +1,8 @@
 name: Ring Docker Image CI
 
 on:
-  schedule:
-    - cron: '0 0 * * *' 
+  # schedule:
+  #   - cron: '0 0 * * *' 
   push:
     branches: [ "main" ]
   release:

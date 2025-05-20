@@ -47,10 +47,20 @@ fi
 # Check if the INPUT_OUTPUT_EXE is 'true'
 if [ "$INPUT_OUTPUT_EXE" = "true" ]; then
     # Execute ring2exe with the provided arguments and input file
-    ring2exe $INPUT_ARGS $INPUT_FILE
+    SCRIPT_DIR=$(dirname "$INPUT_FILE")
+    SCRIPT_BASE=$(basename "$INPUT_FILE")
+    
+    pushd "$SCRIPT_DIR" > /dev/null
+    ring2exe $INPUT_ARGS "$SCRIPT_BASE"
+    popd > /dev/null
 else
     # Execute ring with the provided arguments and input file
-    output=$(ring $INPUT_ARGS $INPUT_FILE)
+    SCRIPT_DIR=$(dirname "$INPUT_FILE")
+    SCRIPT_BASE=$(basename "$INPUT_FILE")
+
+    pushd "$SCRIPT_DIR" > /dev/null
+    output=$(ring $INPUT_ARGS "$SCRIPT_BASE")
+    popd > /dev/null
 
     # Print the output
     echo "$output"

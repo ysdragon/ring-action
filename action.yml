@@ -104,7 +104,7 @@ runs:
         cd $HOME/ring
         
         # Make the process of building RingQt faster (by running make in parallel)
-        find extensions/ringqt -name "*.sh" -exec sed -i '' 's/\bmake\b/make -j$(nproc)/g' {} +
+        find extensions/ringqt -name "*.sh" -exec sed -i '' 's/\bmake\b/make -j$(sysctl -n hw.ncpu)/g' {} +
         
         cd $HOME/ring/build
         echo "Installing dependencies for macOS..."
@@ -162,15 +162,19 @@ runs:
       if: runner.os == 'macOS'
       shell: bash
       run: |
+        SCRIPT_DIR=$(dirname "${{ inputs.file }}")
+        SCRIPT_BASE=$(basename "${{ inputs.file }}")
+        pushd "$SCRIPT_DIR" > /dev/null
         if [ "${{ inputs.output_exe }}" = "true" ]; then
-          ring2exe ${{ inputs.args }} ${{ inputs.file }}
+          ring2exe ${{ inputs.args }} "$SCRIPT_BASE"
         else
-          output=$(ring ${{ inputs.args }} ${{ inputs.file }})
+          output=$(ring ${{ inputs.args }} "$SCRIPT_BASE")
           echo "$output"
           if [[ "$output" == *"Error"* ]]; then
             exit 1
           fi
         fi
+        popd > /dev/null
 
     - name: Build project (Linux)
       if: runner.os == 'Linux'

@@ -97,38 +97,44 @@ runs:
       shell: bash
       run: |
         set -x
+        set -e
 
-        # Clone Ring repository
+        echo "Cloning Ring ${{ inputs.version }}..."
         git clone --depth 1 --branch ${{ inputs.version }} -q https://github.com/ring-lang/ring $HOME/ring
         cd $HOME/ring
         
-        # Install dependencies
-        cd build
+        # Make the process of building RingQt faster (by running make in parallel)
+        find extensions/ringqt -name "*.sh" -exec sed -i '' 's/\bmake\b/make -j$(nproc)/g' {} +
+        
+        cd $HOME/ring/build
+        echo "Installing dependencies for macOS..."
         chmod +x installdepmac.sh
         ./installdepmac.sh > /dev/null 2>&1
         
-        # Build Ring
+        echo "Building Ring ${{ inputs.version }}..."
         chmod +x buildclang.sh
         ./buildclang.sh > /dev/null 2>&1
 
-        # Debug
-        ls $HOME/ring/lib/
-
-        # Add Ring to PATH
+        echo "Adding Ring to PATH and DYLD_LIBRARY_PATH..."
         echo "$HOME/ring/bin" >> $GITHUB_PATH
         export PATH="$HOME/ring/bin:$PATH"
-        export LD_LIBRARY_PATH="$HOME/ring/lib:$DYLD_LIBRARY_PATH"
-        export DYLD_LIBRARY_PATH="$HOME/ring/lib:$DYLD_LIBRARY_PATH"
+        
+        if [ -z "$DYLD_LIBRARY_PATH" ]; then
+          export DYLD_LIBRARY_PATH="$HOME/ring/lib"
+        else
+          export DYLD_LIBRARY_PATH="$HOME/ring/lib:$DYLD_LIBRARY_PATH"
+        fi
+        echo "DYLD_LIBRARY_PATH set to: $DYLD_LIBRARY_PATH"
 
         # Install packages if specified
         if [ ! -z "${{ inputs.ring_packages }}" ]; then
-            echo "Installing specified packages..."
+            echo "Installing specified Ring packages: ${{ inputs.ring_packages }}"
             for package in ${{ inputs.ring_packages }}; do
                 echo "Installing package: ${package}"
                 ringpm install "${package}"
             done
         fi
-        
+
         echo "Ring setup completed successfully"
 
     - name: Set up Ring (Linux)

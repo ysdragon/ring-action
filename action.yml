@@ -148,14 +148,22 @@ runs:
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
-        if ("${{ inputs.output_exe }}" -eq "true") {
-          ring2exe ${{ inputs.args }} ${{ inputs.file }}
-        } else {
-          $output = ring ${{ inputs.args }} ${{ inputs.file }}
-          Write-Output $output
-          if ($output -match "Error") {
-            exit 1
+        $scriptDir = Split-Path -Parent "${{ inputs.file }}"
+        $scriptBase = Split-Path -Leaf "${{ inputs.file }}"
+        
+        Push-Location $scriptDir
+        try {
+          if ("${{ inputs.output_exe }}" -eq "true") {
+            ring2exe ${{ inputs.args }} $scriptBase
+          } else {
+            $output = ring ${{ inputs.args }} $scriptBase
+            Write-Output $output
+            if ($output -match "Error") {
+              exit 1
+            }
           }
+        } finally {
+          Pop-Location
         }
 
     - name: Build project (macOS)

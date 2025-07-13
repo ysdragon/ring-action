@@ -21,17 +21,20 @@ A GitHub Action that compiles [Ring](https://ring-lang.net/) Programming Languag
 
 ## Platform & Architecture Support
 
-| Platform | Architecture | Supported | Notes |
-|----------|--------------|-----------|--------|
-| Linux | x64 | ✅ | Full support |
-| Linux | x86 | ❌ | Not supported |
-| Linux | ARM64 | ✅ | Full support |
-| Linux | RISCV64 | ❌ | Not supported |
-| macOS | Intel | ✅ | Full support |
-| macOS | Apple Silicon | ❌ | Not supported |
-| Windows | x64 | ✅ | Pre-built binaries only |
-| Windows | x86 | ❌ | Not supported |
-| Windows | ARM64 | ❌ | Not supported |
+| Platform | Architecture      | Supported | Notes                        |
+|----------|------------------|-----------|------------------------------|
+| Linux    | x86_64 / amd64   | ✅        | Full support                 |
+| Linux    | arm64            | ✅        | Full support                 |
+| Linux    | i386             | ❌        | Not supported                |
+| Linux    | riscv64          | ❌        | Not supported                |
+| macOS    | Intel (x86_64)   | ✅        | Full support                 |
+| macOS    | Apple Silicon    | ❌        | Not supported (planned)      |
+| Windows  | x86_64 / amd64   | ✅        | Pre-built binaries only      |
+| Windows  | i386             | ❌        | Not supported                |
+| Windows  | arm64            | ❌        | Not supported                |
+
+> [!NOTE]
+> Apple Silicon (macOS ARM) support is planned for future releases.
 
 ## Inputs
 

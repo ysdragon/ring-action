@@ -2,23 +2,29 @@
 
 # Check if we need to switch Ring versions
 if [ "$INPUT_VERSION" != "v1.23" ]; then
+    echo "Switching Ring version to $INPUT_VERSION..."
     # Navigate to the ring directory
     pushd /opt/ring
     
     # Clean untracked files and directories
+    echo "Cleaning untracked files..."
     git clean -xf > /dev/null 2>&1
 
     # Fetch all remote branches and tags
+    echo "Fetching all remote branches and tags..."
     git fetch --all --tags > /dev/null 2>&1
 
     # Reset origin/master
+    echo "Resetting to origin/master..."
     git reset --hard origin/master > /dev/null 2>&1
     
     # If INPUT_VERSION is a tag, checkout the tag
     if git rev-parse "refs/tags/$INPUT_VERSION" >/dev/null 2>&1; then
+        echo "Checking out tag: $INPUT_VERSION"
         git checkout "refs/tags/$INPUT_VERSION" > /dev/null 2>&1
     # If INPUT_VERSION is a branch, checkout the remote branch
     elif git rev-parse "origin/$INPUT_VERSION" >/dev/null 2>&1; then
+        echo "Checking out branch: $INPUT_VERSION"
         git checkout -B "$INPUT_VERSION" "origin/$INPUT_VERSION" > /dev/null 2>&1
     else
         echo "Error: Version $INPUT_VERSION not found"
@@ -28,11 +34,13 @@ if [ "$INPUT_VERSION" != "v1.23" ]; then
     # Check the RING_VERSION and apply patches if it's under v1.22
     version_num=$(echo "$INPUT_VERSION" | sed 's/^v//')
     if [ "$(echo "$version_num < 1.22" | bc)" -eq 1 ]; then
+        echo "Applying patches for versions older than v1.22..."
         git apply ringpdfgen.patch && \
         git apply ringfastpro.patch
     fi
 
     # Apply necessary build modifications for the new version
+    echo "Applying build modifications..."
     find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} +
     find . -type f -name "*.sh" -exec sed -i 's/-L \/usr\/lib\/i386-linux-gnu//g' {} +
     find extensions/ringqt -name "*.sh" -exec sed -i 's/\bmake\b/make -j$(nproc)/g' {} +
@@ -48,8 +56,10 @@ if [ "$INPUT_VERSION" != "v1.23" ]; then
     sed -i 's/-L \/usr\/local\/pgsql\/lib//g' extensions/ringpostgresql/buildgcc.sh
 
     # Build the project
+    echo "Building Ring from source..."
     cd build
     bash buildgcc.sh
+    echo "Ring built successfully."
     
     # Return to the previous directory
     popd
@@ -57,17 +67,20 @@ fi
 
 # Check if the INPUT_RING_PACKAGES is not empty
 if [ "$INPUT_RING_PACKAGES" != "" ]; then
+    echo "Installing Ring packages..."
     # Split the input string into an array of packages
     IFS=' ' read -r -a packages <<< "$INPUT_RING_PACKAGES"
     
     # Loop through each package and install it
     for package in "${packages[@]}"; do
+        echo "Installing $package..."
         ringpm install "$package"
     done
 fi
 
 # Check if the INPUT_OUTPUT_EXE is 'true'
 if [ "$INPUT_OUTPUT_EXE" = "true" ]; then
+    echo "Generating executable..."
     # Execute ring2exe with the provided arguments and input file
     SCRIPT_DIR=$(dirname "$INPUT_FILE")
     SCRIPT_BASE=$(basename "$INPUT_FILE")
@@ -76,6 +89,7 @@ if [ "$INPUT_OUTPUT_EXE" = "true" ]; then
     ring2exe $INPUT_ARGS "$SCRIPT_BASE"
     popd > /dev/null
 else
+    echo "Running Ring script..."
     # Execute ring with the provided arguments and input file
     SCRIPT_DIR=$(dirname "$INPUT_FILE")
     SCRIPT_BASE=$(basename "$INPUT_FILE")

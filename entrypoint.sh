@@ -25,6 +25,28 @@ if [ "$INPUT_VERSION" != "v1.23" ]; then
         exit 1
     fi
 
+    # Check the RING_VERSION and apply patches if it's under v1.22
+    version_num=$(echo "$INPUT_VERSION" | sed 's/^v//')
+    if [ "$(echo "$version_num < 1.22" | bc)" -eq 1 ]; then
+        git apply ringpdfgen.patch && \
+        git apply ringfastpro.patch
+    fi
+
+    # Apply necessary build modifications for the new version
+    find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} +
+    find . -type f -name "*.sh" -exec sed -i 's/-L \/usr\/lib\/i386-linux-gnu//g' {} +
+    find extensions/ringqt -name "*.sh" -exec sed -i 's/\bmake\b/make -j$(nproc)/g' {} +
+    rm -rf extensions/ringraylib5/src/linux_raylib-5
+    rm -rf extensions/ringtilengine/linux_tilengine
+    rm -rf extensions/ringlibui/linux
+    sed -i 's/ -I linux_raylib-5\/include//g; s/ -L $PWD\/linux_raylib-5\/lib//g' extensions/ringraylib5/src/buildgcc.sh
+    sed -i '/extensions\/ringraylib5\/src\/linux/d' bin/install.sh
+    sed -i 's/ -I linux_tilengine\/include//g; s/ -L $PWD\/linux_tilengine\/lib//g' extensions/ringtilengine/buildgcc.sh
+    sed -i '/extensions\/ringtilengine/d' bin/install.sh
+    sed -i 's/ -I linux//g; s/ -L \$PWD\/linux//g' extensions/ringlibui/buildgcc.sh
+    sed -i '/extensions\/ringlibui\/linux/d' bin/install.sh
+    sed -i 's/-L \/usr\/local\/pgsql\/lib//g' extensions/ringpostgresql/buildgcc.sh
+
     # Build the project
     cd build
     bash buildgcc.sh

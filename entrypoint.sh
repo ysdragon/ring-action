@@ -10,26 +10,16 @@ if [ "$INPUT_VERSION" != "v1.23" ]; then
     echo "Cleaning untracked files..."
     git clean -xf > /dev/null 2>&1
 
-    # Fetch all remote branches and tags
-    echo "Fetching all remote branches and tags..."
-    git fetch --all --tags > /dev/null 2>&1
-
-    # Reset origin/master
-    echo "Resetting to origin/master..."
-    git reset --hard origin/master > /dev/null 2>&1
-    
-    # If INPUT_VERSION is a tag, checkout the tag
-    if git rev-parse "refs/tags/$INPUT_VERSION" >/dev/null 2>&1; then
-        echo "Checking out tag: $INPUT_VERSION"
-        git checkout "refs/tags/$INPUT_VERSION" > /dev/null 2>&1
-    # If INPUT_VERSION is a branch, checkout the remote branch
-    elif git rev-parse "origin/$INPUT_VERSION" >/dev/null 2>&1; then
-        echo "Checking out branch: $INPUT_VERSION"
-        git checkout -B "$INPUT_VERSION" "origin/$INPUT_VERSION" > /dev/null 2>&1
-    else
+    # Fetch only the desired version (tag or branch) with a shallow clone
+    echo "Fetching version: $INPUT_VERSION..."
+    if ! git fetch --depth 1 origin "$INPUT_VERSION"; then
         echo "Error: Version $INPUT_VERSION not found"
         exit 1
     fi
+
+    # Checkout the fetched version
+    echo "Checking out version: $INPUT_VERSION"
+    git checkout -f FETCH_HEAD > /dev/null 2>&1
 
     # Check the RING_VERSION and apply patches if it's under v1.22
     version_num=$(echo "$INPUT_VERSION" | sed 's/^v//')
@@ -58,10 +48,14 @@ if [ "$INPUT_VERSION" != "v1.23" ]; then
     # Build the project
     echo "Building Ring from source..."
     cd build
-    bash buildgcc.sh
+    if bash buildgcc.sh; then
+        echo "Ring built successfully."
+    else
+        echo "Failed to build Ring from source."
+        exit 1
+    fi
     cd ../bin
     bash install.sh
-    echo "Ring built successfully."
     
     # Return to the previous directory
     popd

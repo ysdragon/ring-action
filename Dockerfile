@@ -1,15 +1,16 @@
-# Use Ubuntu 24.04 (noble) as the base image
-FROM ubuntu:24.04
+# Stage 1: Builder
+FROM ubuntu:24.04 AS builder
 
 # Set environment variables to reduce interaction during package installation
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8
 
-# Set the Ring release version
-ENV RING_VERSION=1.23
+# Set the Ring release version (used for initial clone)
+ARG RING_VERSION_ARG=1.23
+ENV RING_VERSION=$RING_VERSION_ARG
 
-# Install necessary packages
+# Install necessary build packages
 RUN apt-get update && apt-get install -y -qq --no-install-recommends \
     bc \
     build-essential \
@@ -88,7 +89,7 @@ RUN mkdir -p /opt/tilengine
 WORKDIR /opt/tilengine
 RUN git clone --depth 1 -q https://github.com/megamarc/Tilengine . \
     && cd src \
-    && make -j$(nproc)  \
+    && make -j$(nproc) \
     && cd ../ \
     && ./install \
     && mv /usr/lib/libTilengine.so /usr/lib/libtilengine.so \
@@ -101,11 +102,8 @@ RUN mkdir -p /opt/libui-ng
 WORKDIR /opt/libui-ng
 RUN git clone --depth 1 -q https://github.com/libui-ng/libui-ng . \
     && meson setup build \
-    && ninja -C build  \
+    && ninja -C build \
     && ninja -C build install
-
-# Clean up
-RUN rm -rf /opt/raylib /opt/tilengine /opt/libui-ng
 
 # Create /opt/ring directory
 RUN mkdir -p /opt/ring
@@ -137,16 +135,90 @@ RUN find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} + \
     && sed -i '/extensions\/ringlibui\/linux/d' bin/install.sh \
     && sed -i 's/-L \/usr\/local\/pgsql\/lib//g' extensions/ringpostgresql/buildgcc.sh \
     && cd build \
-    && bash buildgcc.sh -ring -ringallegro -ringfreeglut -ringmurmurhash -ringqt-core -ringqt-light -ringqt -ringstbimage -ringzip -ringhttplib -ringmysql -ringraylib -ringtilengine -ringthreads -ringcjson -ringinternet -ringodbc -ringrogueutil -ringpdfgen -ringconsolecolors -ringlibui -ringopengl -ringsdl -ringcurl -ringlibuv -ringopenssl -ringsockets -ringfastpro -ringpostgresql -ringsqlite -ring2exe -ringpm
+    && bash buildgcc.sh -ring -ringallegro -ringfreeglut -ringmurmurhash -ringqt-core -ringqt-light -ringqt -ringstbimage -ringzip -ringhttplib -ringmysql -ringraylib -ringtilengine -ringthreads -ringcjson -ringinternet -ringodbc -ringrogueutil -ringpdfgen -ringconsolecolors -ringlibui -ringopengl -ringsdl -ringcurl -ringlibuv -ringopenssl -ringsockets -ringfastpro -ringpostgresql -ringsqlite -ring2exe -ringpm \
+    && cd .. && bin/install.sh
 
-# Reduce image size by removing unnecessary directories
-RUN rm -rf applications documents marketing samples tools/{editors,formdesigner,help2wiki,ringnotepad,tryringonline}
+# Stage 2: Runtime
+FROM ubuntu:24.04 AS runtime
 
-# Copy the entrypoint script
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
+# Install runtime dependencies (including build tools needed by entrypoint.sh)
+# Note: The entrypoint.sh script performs git operations and recompilation,
+# so many build-time dependencies are still required in the final image.
+RUN apt-get update && apt-get install -y -qq --no-install-recommends \
+    bc \
+    build-essential \
+    wget \
+    unzip \
+    cmake \
+    meson \
+    ninja-build \
+    ca-certificates \
+    git \
+    unixodbc \
+    libmariadb-dev-compat \
+    libpq-dev \
+    libcurl4-gnutls-dev \
+    libssl-dev \
+    liballegro5.2 \
+    liballegro-image5.2 \
+    liballegro-ttf5.2 \
+    liballegro-audio5.2 \
+    liballegro-acodec5.2 \
+    liballegro-dialog5.2 \
+    liballegro-physfs5.2 \
+    qtbase5-dev \
+    qtchooser \
+    qt5-qmake \
+    qtbase5-dev-tools \
+    qtmultimedia5-dev \
+    libqt5multimedia5-plugins \
+    libqt5webkit5-dev \
+    libqt5serialport5-dev \
+    qtconnectivity5-dev \
+    qtdeclarative5-dev \
+    libqt5opengl5-dev \
+    libqt5texttospeech5-dev \
+    qtpositioning5-dev \
+    qt3d5-dev \
+    qt3d5-dev-tools \
+    libqt5charts5-dev \
+    libqt5svg5-dev \
+    qtwebengine5-dev \
+    qml-module-qtquick-controls \
+    qml-module-qtcharts \
+    mesa-common-dev \
+    freeglut3-dev \
+    libpng-dev \
+    libsdl2-2.0-0 \
+    libsdl2-net-2.0-0 \
+    libsdl2-mixer-2.0-0 \
+    libsdl2-image-2.0-0 \
+    libsdl2-ttf-2.0-0 \
+    libglew-dev \
+    libgl-dev \
+    apache2 \
+    libuv1 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/cache/apt/*
+
+# Copy installed Ring components from the builder stage
+COPY --from=builder /opt/ring /opt/ring
+COPY --from=builder /usr/bin /usr/bin
+COPY --from=builder /usr/lib /usr/lib
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Set the working directory
+# Reduce image size by removing unnecessary directories
+WORKDIR /opt/ring
+RUN rm -rf applications documents marketing samples tools/{editors,formdesigner,help2wiki,ringnotepad,tryringonline}
+
+# Set the working directory for the application
 WORKDIR /app
 
 # Set the entrypoint

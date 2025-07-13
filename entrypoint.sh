@@ -35,8 +35,8 @@ if [ "$INPUT_VERSION" != "v1.23" ]; then
     version_num=$(echo "$INPUT_VERSION" | sed 's/^v//')
     if [ "$(echo "$version_num < 1.22" | bc)" -eq 1 ]; then
         echo "Applying patches for versions older than v1.22..."
-        git apply ringpdfgen.patch && \
-        git apply ringfastpro.patch
+        git apply /patches/ringpdfgen.patch && \
+        git apply /patches/ringfastpro.patch
     fi
 
     # Apply necessary build modifications for the new version
@@ -59,6 +59,8 @@ if [ "$INPUT_VERSION" != "v1.23" ]; then
     echo "Building Ring from source..."
     cd build
     bash buildgcc.sh
+    cd ../bin
+    bash install.sh
     echo "Ring built successfully."
     
     # Return to the previous directory

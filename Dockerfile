@@ -212,6 +212,7 @@ COPY --from=builder /opt/ring /opt/ring
 COPY --from=builder /usr/bin /usr/bin
 COPY --from=builder /usr/lib /usr/lib
 COPY entrypoint.sh /entrypoint.sh
+COPY patches /patches
 RUN chmod +x /entrypoint.sh
 
 # Reduce image size by removing unnecessary directories

@@ -6,20 +6,20 @@ if [ "$INPUT_VERSION" != "v1.23" ]; then
     pushd /opt/ring
     
     # Clean untracked files and directories
-    git clean -xf
-    
+    git clean -xf > /dev/null 2>&1
+
     # Fetch all remote branches and tags
-    git fetch --all --tags
-    
+    git fetch --all --tags > /dev/null 2>&1
+
     # Reset origin/master
-    git reset --hard origin/master
+    git reset --hard origin/master > /dev/null 2>&1
     
     # If INPUT_VERSION is a tag, checkout the tag
     if git rev-parse "refs/tags/$INPUT_VERSION" >/dev/null 2>&1; then
-        git checkout "refs/tags/$INPUT_VERSION"
+        git checkout "refs/tags/$INPUT_VERSION" > /dev/null 2>&1
     # If INPUT_VERSION is a branch, checkout the remote branch
     elif git rev-parse "origin/$INPUT_VERSION" >/dev/null 2>&1; then
-        git checkout -B "$INPUT_VERSION" "origin/$INPUT_VERSION"
+        git checkout -B "$INPUT_VERSION" "origin/$INPUT_VERSION" > /dev/null 2>&1
     else
         echo "Error: Version $INPUT_VERSION not found"
         exit 1

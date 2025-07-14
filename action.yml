@@ -77,10 +77,22 @@ runs:
             # Install packages if specified
             if ("${{ inputs.ring_packages }}" -ne "") {
                 Write-Host "Installing specified packages..."
-                $packages = "${{ inputs.ring_packages }}".Split(" ")
+                $words = "${{ inputs.ring_packages }}".Split(" ")
+                $packages = New-Object System.Collections.ArrayList
+                $i = 0
+                while ($i -lt $words.Length) {
+                    if (($i + 2) -lt $words.Length -and $words[$i+1] -eq "from") {
+                        $packages.Add("$($words[$i]) from $($words[$i+2])") | Out-Null
+                        $i += 3
+                    } else {
+                        $packages.Add($words[$i]) | Out-Null
+                        $i += 1
+                    }
+                }
+                
                 foreach ($package in $packages) {
                     Write-Host "Installing package: $package"
-                    & "C:\ring\bin\ringpm" install $package
+                    & "C:\ring\bin\ringpm" install ($package -split ' ')
                 }
             }
                       
@@ -129,9 +141,27 @@ runs:
         # Install packages if specified
         if [ ! -z "${{ inputs.ring_packages }}" ]; then
             echo "Installing specified Ring packages: ${{ inputs.ring_packages }}"
-            for package in ${{ inputs.ring_packages }}; do
-                echo "Installing package: ${package}"
-                ringpm install "${package}"
+            # Read the input into an array of words
+            IFS=' ' read -r -a words <<< "${{ inputs.ring_packages }}"
+            
+            # Reconstruct packages with "from" statements
+            declare -a packages
+            i=0
+            n_words=${#words[@]}
+            while [ $i -lt $n_words ]; do
+                if [ $((i + 2)) -lt $n_words ] && [ "${words[$i+1]}" = "from" ]; then
+                    packages+=("${words[$i]} from ${words[$i+2]}")
+                    i=$((i + 3))
+                else
+                    packages+=("${words[$i]}")
+                    i=$((i + 1))
+                fi
+            done
+            
+            # Install the packages
+            for package in "${packages[@]}"; do
+                echo "Installing package: $package"
+                ringpm install $package
             done
         fi
 

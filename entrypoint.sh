@@ -64,13 +64,27 @@ fi
 # Check if the INPUT_RING_PACKAGES is not empty
 if [ "$INPUT_RING_PACKAGES" != "" ]; then
     echo "Installing Ring packages..."
-    # Split the input string into an array of packages
-    IFS=' ' read -r -a packages <<< "$INPUT_RING_PACKAGES"
+    # Split the input string into an array of words
+    IFS=' ' read -r -a words <<< "$INPUT_RING_PACKAGES"
     
-    # Loop through each package and install it
+    declare -a packages
+    i=0
+    n_words=${#words[@]}
+    while [ $i -lt $n_words ]; do
+        # Check for the pattern "<package> from <user>"
+        if [ $((i + 2)) -lt $n_words ] && [ "${words[$i+1]}" = "from" ]; then
+            packages+=("${words[$i]} from ${words[$i+2]}")
+            i=$((i + 3))
+        else
+            packages+=("${words[$i]}")
+            i=$((i + 1))
+        fi
+    done
+
+    # Loop through each reconstructed package and install it
     for package in "${packages[@]}"; do
         echo "Installing $package..."
-        ringpm install "$package"
+        ringpm install $package
     done
 fi
 

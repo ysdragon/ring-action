@@ -1,4 +1,4 @@
-name: Ring Docker Image CI
+name: Ring Docker Image CI (Full)
 
 on:
   push:

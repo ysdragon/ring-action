@@ -5,6 +5,9 @@ on:
     branches: [ "main" ]
     paths-ignore:
       - '**.md'
+      - '.github/workflows/docker-light-image.yml'
+      - 'Dockerfile.light'
+      - 'entrypoint_light.sh'
   release:
     types: [published]
 

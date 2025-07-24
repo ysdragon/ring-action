@@ -63,7 +63,6 @@ fi
 
 # Check if the INPUT_RING_PACKAGES is not empty
 if [ "$INPUT_RING_PACKAGES" != "" ]; then
-    echo "Installing Ring packages..."
     # Split the input string into an array of words
     IFS=' ' read -r -a words <<< "$INPUT_RING_PACKAGES"
     
@@ -90,7 +89,6 @@ fi
 
 # Check if the INPUT_OUTPUT_EXE is 'true'
 if [ "$INPUT_OUTPUT_EXE" = "true" ]; then
-    echo "Generating executable..."
     # Execute ring2exe with the provided arguments and input file
     SCRIPT_DIR=$(dirname "$INPUT_FILE")
     SCRIPT_BASE=$(basename "$INPUT_FILE")
@@ -99,13 +97,12 @@ if [ "$INPUT_OUTPUT_EXE" = "true" ]; then
     ring2exe $INPUT_ARGS "$SCRIPT_BASE"
     popd > /dev/null
 else
-    echo "Running Ring script..."
     # Execute ring with the provided arguments and input file
     SCRIPT_DIR=$(dirname "$INPUT_FILE")
     SCRIPT_BASE=$(basename "$INPUT_FILE")
 
     pushd "$SCRIPT_DIR" > /dev/null
-    output=$(ring $INPUT_ARGS "$SCRIPT_BASE")
+    ring $INPUT_ARGS "$SCRIPT_BASE"
     popd > /dev/null
 
     # Print the output

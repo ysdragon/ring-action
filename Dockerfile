@@ -217,7 +217,9 @@ RUN chmod +x /entrypoint.sh
 
 # Reduce image size by removing unnecessary directories
 WORKDIR /opt/ring
-RUN rm -rf applications documents marketing samples tools/{editors,formdesigner,help2wiki,ringnotepad,tryringonline}
+RUN rm -rf applications documents extensions/tutorial marketing samples tools/{editors,formdesigner,help2wiki,ringnotepad,string2constant,ringrepl,tryringonline,folder2qrc,findinfiles} \
+    language/{tests,visualsrc}
+
 
 # Set the working directory for the application
 WORKDIR /app

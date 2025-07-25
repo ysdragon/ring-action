@@ -108,10 +108,15 @@ RUN git clone --depth 1 -q https://github.com/libui-ng/libui-ng . \
 # Create /opt/ring directory
 RUN mkdir -p /opt/ring
 
-# Clone and build Ring
+# Clone Ring
 WORKDIR /opt/ring
 RUN git clone --depth 1 --branch "v$RING_VERSION" -q https://github.com/ring-lang/ring .
 
+# Reduce image size by removing unnecessary directories
+RUN rm -rf applications documents extensions/{tutorial,libdepwin,microcontroller} marketing samples tools/{editors,formdesigner,help2wiki,ringnotepad,string2constant,ringrepl,tryringonline,folder2qrc,findinfiles} \
+    language/{tests,visualsrc} /opt/raylib /opt/tilengine /opt/libui-ng
+
+# Copy patches
 COPY patches/ringpdfgen.patch .
 COPY patches/ringfastpro.patch .
 
@@ -121,6 +126,7 @@ RUN if [ "$(echo "$RING_VERSION < 1.22" | bc)" -eq 1 ]; then \
         git apply ringfastpro.patch; \
     fi
 
+# Customize the build process and build/install Ring
 RUN find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} + \
     && find . -type f -name "*.sh" -exec sed -i 's/-L \/usr\/lib\/i386-linux-gnu//g' {} + \
     && find extensions/ringqt -name "*.sh" -exec sed -i 's/\bmake\b/make -j$(nproc)/g' {} + \
@@ -214,12 +220,6 @@ COPY --from=builder /usr /usr
 COPY entrypoint.sh /entrypoint.sh
 COPY patches /patches
 RUN chmod +x /entrypoint.sh
-
-# Reduce image size by removing unnecessary directories
-WORKDIR /opt/ring
-RUN rm -rf applications documents extensions/tutorial marketing samples tools/{editors,formdesigner,help2wiki,ringnotepad,string2constant,ringrepl,tryringonline,folder2qrc,findinfiles} \
-    language/{tests,visualsrc}
-
 
 # Set the working directory for the application
 WORKDIR /app

@@ -35,6 +35,11 @@ RUN mkdir -p /opt/ring
 WORKDIR /opt/ring
 RUN git clone --depth 1 --branch "v$RING_VERSION" -q https://github.com/ring-lang/ring .
 
+# Reduce image size by removing unnecessary directories
+RUN rm -rf applications documents marketing samples \
+    tools/editors tools/formdesigner tools/help2wiki tools/ringnotepad tools/string2constant tools/ringrepl tools/tryringonline tools/folder2qrc tools/findinfiles language/tests \
+    extensions/android extensions/libdepwin extensions/ringfreeglut extensions/ringallegro extensions/ringbeep extensions/ringmouseevent extensions/ringnappgui extensions/ringwinapi extensions/ringwincreg extensions/ringwinlib extensions/ringraylib5 extensions/ringtilengine extensions/ringlibui extensions/ringqt extensions/ringrogueutil extensions/ringsdl extensions/webassembly extensions/tutorial extensions/microcontroller
+
 RUN find . -type f -name "*.sh" -exec sed -i 's/\bsudo\b//g' {} + \
     && find . -type f -name "*.sh" -exec sed -i 's/-L \/usr\/lib\/i386-linux-gnu//g' {} + \
     && sed -i 's/-L \/usr\/local\/pgsql\/lib//g' extensions/ringpostgresql/buildgcc.sh \
@@ -89,52 +94,11 @@ RUN apt-get update && apt-get install -y -qq --no-install-recommends \
 
 # Copy installed Ring components from the builder stage
 COPY --from=builder /opt/ring /opt/ring
-
-# Set the working directory
-WORKDIR /opt/ring
-
-# Run the installation script
-RUN bin/install.sh
-
+COPY --from=builder /usr/bin /usr/bin
+COPY --from=builder /usr/lib /usr/lib
 
 COPY entrypoint_light.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-
-# Reduce image size by removing unnecessary directories
-WORKDIR /opt/ring
-RUN rm -rf applications \
-    documents \
-    marketing \
-    samples \
-    tools/{editors, \
-    formdesigner, \
-    help2wiki, \
-    ringnotepad, \
-    string2constant, \ 
-    ringrepl, \
-    tryringonline, \
-    folder2qrc, \
-    findinfiles} \
-    language/{tests} \
-    extensions/{android, \
-    libdepwin, \
-    ringfreeglut, \
-    ringallegro, \
-    ringbeep, \
-    ringmouseevent, \
-    ringnappgui, \
-    ringwinapi, \
-    ringwincreg, \
-    ringwinlib, \
-    ringraylib5, \
-    ringtilengine, \
-    ringlibui, \
-    ringqt, \
-    ringrogueutil, \
-    ringsdl, \
-    webassembly,\
-    tutorial} 
-
 
 # Set the working directory for the application
 WORKDIR /app

@@ -261,4 +261,4 @@ runs:
         -e RING_PACKAGES="${{ env.RING_PACKAGES }}" \
         -e RING_OUTPUT_EXE="${{ env.OUTPUT_EXE }}" \
         -e RING_FILE="${{ env.RING_FILE }}" \
-        quay.io/ydrag0n/ring:latest
+        ghcr.io/ysdragon/ring:latest

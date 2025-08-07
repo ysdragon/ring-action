@@ -256,9 +256,9 @@ runs:
     run: |
       docker run --rm \
         -v "$(pwd):/app" \
-        -e INPUT_VERSION="${{ env.RING_VERSION }}" \
-        -e INPUT_ARGS="${{ env.RING_ARGS }}" \
-        -e INPUT_RING_PACKAGES="${{ env.RING_PACKAGES }}" \
-        -e INPUT_OUTPUT_EXE="${{ env.OUTPUT_EXE }}" \
-        -e INPUT_FILE="${{ env.RING_FILE }}" \
+        -e RING_VERSION="${{ env.RING_VERSION }}" \
+        -e RING_ARGS="${{ env.RING_ARGS }}" \
+        -e RING_PACKAGES="${{ env.RING_PACKAGES }}" \
+        -e RING_OUTPUT_EXE="${{ env.OUTPUT_EXE }}" \
+        -e RING_FILE="${{ env.RING_FILE }}" \
         quay.io/ydrag0n/ring:latest

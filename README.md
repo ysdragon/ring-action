@@ -72,10 +72,28 @@ jobs:
           args: "-static"
 ```
 
-### macOS
+### macOS (Apple Silicon)
 
 ```yaml
-name: macOS Intel Build
+name: macOS (Apple Silicon) Build
+on: [push]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build macOS Intel app
+        uses: ysdragon/ring-action@v1.1.0
+        with:
+          file: "program.ring"
+          output_exe: "true"
+```
+
+### macOS (Intel)
+
+```yaml
+name: macOS (Intel) Build
 on: [push]
 
 jobs:
@@ -119,7 +137,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13]
+        os: [ubuntu-latest, windows-latest, macos-13, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4

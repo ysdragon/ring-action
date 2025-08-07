@@ -28,13 +28,10 @@ A GitHub Action that compiles [Ring](https://ring-lang.net/) Programming Languag
 | Linux    | i386             | ❌        | Not supported                |
 | Linux    | riscv64          | ❌        | Not supported                |
 | macOS    | Intel (x86_64)   | ✅        | Full support                 |
-| macOS    | Apple Silicon    | ❌        | Not supported (planned)      |
+| macOS    | Apple Silicon    | ✅        | Full support      |
 | Windows  | x86_64 / amd64   | ✅        | Pre-built binaries only      |
 | Windows  | i386             | ❌        | Not supported                |
 | Windows  | arm64            | ❌        | Not supported                |
-
-> [!NOTE]
-> Apple Silicon (macOS ARM) support is planned for future releases.
 
 ## Inputs
 

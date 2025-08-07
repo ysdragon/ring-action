@@ -108,11 +108,8 @@ runs:
       if: runner.os == 'macOS'
       shell: bash
       run: |
-        set -x
-        set -e
-
-        echo "Cloning Ring ${{ inputs.version }}..."
-        git clone --depth 1 --branch ${{ inputs.version }} -q https://github.com/ring-lang/ring $HOME/ring
+        echo "Cloning Ring..."
+        git clone --depth 1 -q https://github.com/ring-lang/ring $HOME/ring
         cd $HOME/ring
         
         # Make the process of building RingQt faster (by running make in parallel)
@@ -123,7 +120,7 @@ runs:
         chmod +x installdepmac.sh
         ./installdepmac.sh > /dev/null 2>&1
         
-        echo "Building Ring ${{ inputs.version }}..."
+        echo "Building Ring..."
         chmod +x buildclang.sh
         ./buildclang.sh > /dev/null 2>&1
 

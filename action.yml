@@ -29,190 +29,236 @@ branding:
 runs:
   using: 'composite'
   steps:
-    - name: Set up environment variables
-      shell: bash
-      run: |
-        echo "RING_VERSION=${{ inputs.version }}" >> $GITHUB_ENV
-        echo "RING_FILE=${{ inputs.file }}" >> $GITHUB_ENV
-        echo "RING_ARGS=${{ inputs.args }}" >> $GITHUB_ENV
+  - name: Set up environment variables
+    shell: bash
+    run: |
+      echo "RING_VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+      echo "RING_FILE=${{ inputs.file }}" >> $GITHUB_ENV
+      echo "RING_ARGS=${{ inputs.args }}" >> $GITHUB_ENV
+      echo "RING_PACKAGES=${{ inputs.ring_packages }}" >> $GITHUB_ENV
+      echo "OUTPUT_EXE=${{ inputs.output_exe }}" >> $GITHUB_ENV
 
-    - name: Install 7zip (Windows)
-      if: runner.os == 'Windows'
-      shell: pwsh
-      run: |
-        choco install 7zip -y
+  - name: Get Windows Version and Arch
+    if: runner.os == 'Windows'
+    shell: pwsh
+    run: |
+      "OS_VERSION=$((Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").DisplayVersion)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      "OS_ARCH=$($env:PROCESSOR_ARCHITECTURE)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-    - name: Set up Ring (Windows)
-      if: runner.os == 'Windows'
-      shell: pwsh
-      run: |
-        # Create temp directory
-        Write-Host "Creating temporary directory..."
-        $downloadDir = "C:\RingTemp"
-        New-Item -ItemType Directory -Force -Path $downloadDir
-        cd $downloadDir
-        
-        # Download Ring installer
-        $version = "${{ inputs.version }}"
-        $cleanVersion = $version -replace '^v', ''
-        $installerUrl = "https://github.com/ring-lang/ring/releases/download/$version/Ring_${cleanVersion}_Windows_64bit.exe"
-        Write-Host "Downloading Ring from: $installerUrl"
-        
-        try {
-            $ProgressPreference = 'SilentlyContinue'
-            Invoke-WebRequest -Uri $installerUrl -OutFile "ring_installer.exe" -UseBasicParsing
-            
-            # Extract quietly
-            Write-Host "Extracting Ring installer..."
-            & 7z x "ring_installer.exe" -o"C:\" -y -bso0 -bsp0
-                        
-            # Add Ring to PATH
-            Write-Host "Adding Ring to PATH..."
-            echo "C:\ring\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-            
-            # Test Ring installation
-            $env:Path = "C:\ring\bin;" + $env:Path
-            Write-Host "Testing Ring installation..."
-            
-            # Install packages if specified
-            if ("${{ inputs.ring_packages }}" -ne "") {
-                Write-Host "Installing specified packages..."
-                $words = "${{ inputs.ring_packages }}".Split(" ")
-                $packages = New-Object System.Collections.ArrayList
-                $i = 0
-                while ($i -lt $words.Length) {
-                    if (($i + 2) -lt $words.Length -and $words[$i+1] -eq "from") {
-                        $packages.Add("$($words[$i]) from $($words[$i+2])") | Out-Null
-                        $i += 3
-                    } else {
-                        $packages.Add($words[$i]) | Out-Null
-                        $i += 1
-                    }
-                }
-                
-                foreach ($package in $packages) {
-                    Write-Host "Installing package: $package"
-                    & "C:\ring\bin\ringpm" install ($package -split ' ')
-                }
-            }
+  - name: Cache Ring (Windows)
+    if: runner.os == 'Windows'
+    id: cache-ring-windows
+    uses: actions/cache@v3
+    with:
+      path: C:\ring
+      key: ${{ runner.os }}-${{ env.OS_VERSION }}-${{ env.OS_ARCH }}-ring-${{ env.RING_VERSION }}
+
+  - name: Set up Ring (Windows)
+    if: runner.os == 'Windows' && steps.cache-ring-windows.outputs.cache-hit != 'true'
+    shell: pwsh
+    run: |
+      choco install 7zip -y --no-progress > $null 2>&1
+
+      $downloadDir = "C:\RingTemp"
+      New-Item -ItemType Directory -Force -Path $downloadDir > $null
+      cd $downloadDir
+
+      $version = "${{ env.RING_VERSION }}"
+      $cleanVersion = $version -replace '^v', ''
+      $installerUrl = "https://github.com/ring-lang/ring/releases/download/$version/Ring_${cleanVersion}_Windows_64bit.exe"
+
+      try {
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest -Uri $installerUrl -OutFile "ring_installer.exe" -UseBasicParsing
+          
+          & 7z x "ring_installer.exe" -o"C:\" -y -bso0 -bsp0
                       
-            Write-Host "Ring setup completed successfully"
-            
-        } catch {
-            Write-Host "Error during Ring setup: $_"
-            Write-Host "Stack trace: $($_.ScriptStackTrace)"
-            exit 1
-        }
+          echo "C:\ring\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          
+          $env:Path = "C:\ring\bin;" + $env:Path
+          
+      } catch {
+          Write-Host "Error during Ring setup: $_"
+          Write-Host "Stack trace: $($_.ScriptStackTrace)"
+          exit 1
+      }
 
-    - name: Set up Ring (macOS)
-      if: runner.os == 'macOS'
-      shell: bash
-      run: |
-        echo "Cloning Ring..."
-        git clone --depth 1 -q https://github.com/ring-lang/ring $HOME/ring
-        cd $HOME/ring
-        
-        # Make the process of building RingQt faster (by running make in parallel)
-        find extensions/ringqt -name "*.sh" -exec sed -i '' 's/\bmake\b/make -j$(sysctl -n hw.ncpu)/g' {} +
-        
-        cd $HOME/ring/build
-        echo "Installing dependencies for macOS..."
-        chmod +x installdepmac.sh
-        ./installdepmac.sh > /dev/null 2>&1
-        
-        echo "Building Ring..."
-        chmod +x buildclang.sh
-        ./buildclang.sh > /dev/null 2>&1
+  - name: Add Ring to PATH (Windows)
+    if: runner.os == 'Windows'
+    shell: pwsh
+    run: echo "C:\ring\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-        echo "Adding Ring to PATH and DYLD_LIBRARY_PATH..."
-        echo "$HOME/ring/bin" >> $GITHUB_PATH
-        export PATH="$HOME/ring/bin:$PATH"
-        
-        if [ -z "$DYLD_LIBRARY_PATH" ]; then
-          export DYLD_LIBRARY_PATH="$HOME/ring/lib"
-        else
-          export DYLD_LIBRARY_PATH="$HOME/ring/lib:$DYLD_LIBRARY_PATH"
-        fi
-        echo "DYLD_LIBRARY_PATH set to: $DYLD_LIBRARY_PATH"
-
-        # Install packages if specified
-        if [ ! -z "${{ inputs.ring_packages }}" ]; then
-            echo "Installing specified Ring packages: ${{ inputs.ring_packages }}"
-            # Read the input into an array of words
-            IFS=' ' read -r -a words <<< "${{ inputs.ring_packages }}"
-            
-            # Reconstruct packages with "from" statements
-            declare -a packages
-            i=0
-            n_words=${#words[@]}
-            while [ $i -lt $n_words ]; do
-                if [ $((i + 2)) -lt $n_words ] && [ "${words[$i+1]}" = "from" ]; then
-                    packages+=("${words[$i]} from ${words[$i+2]}")
-                    i=$((i + 3))
-                else
-                    packages+=("${words[$i]}")
-                    i=$((i + 1))
-                fi
-            done
-            
-            # Install the packages
-            for package in "${packages[@]}"; do
-                echo "Installing package: $package"
-                ringpm install $package
-            done
-        fi
-
-        echo "Ring setup completed successfully"
-
-    - name: Set up Ring (Linux)
-      if: runner.os == 'Linux'
-      shell: bash
-      run: |
-        # Use the existing Docker container for Linux
-        docker pull quay.io/ydrag0n/ring:latest
-
-    - name: Build project (Windows)
-      if: runner.os == 'Windows'
-      shell: pwsh
-      run: |
-        $scriptDir = Split-Path -Parent "${{ inputs.file }}"
-        $scriptBase = Split-Path -Leaf "${{ inputs.file }}"
-        
-        Push-Location $scriptDir
-        try {
-          if ("${{ inputs.output_exe }}" -eq "true") {
-            ring2exe ${{ inputs.args }} $scriptBase
+  - name: Install Ring packages (Windows)
+    if: runner.os == 'Windows' && inputs.ring_packages != ''
+    shell: pwsh
+    run: |
+      $words = "${{ env.RING_PACKAGES }}".Split(" ")
+      $packages = New-Object System.Collections.ArrayList
+      $i = 0
+      while ($i -lt $words.Length) {
+          if (($i + 2) -lt $words.Length -and $words[$i+1] -eq "from") {
+              $packages.Add("$($words[$i]) from $($words[$i+2])") | Out-Null
+              $i += 3
           } else {
-            $output = ring ${{ inputs.args }} $scriptBase
-            Write-Output $output
-            if ($output -match "Error") {
-              exit 1
-            }
+              $packages.Add($words[$i]) | Out-Null
+              $i += 1
           }
-        } finally {
-          Pop-Location
-        }
+      }
+      foreach ($package in $packages) {
+          Write-Host "Installing package: $package"
+          & "C:\ring\bin\ringpm" install ($package -split ' ')
+      }
 
-    - name: Build project (macOS)
-      if: runner.os == 'macOS'
-      shell: bash
-      run: |
-        SCRIPT_DIR=$(dirname "${{ inputs.file }}")
-        SCRIPT_BASE=$(basename "${{ inputs.file }}")
-        pushd "$SCRIPT_DIR" > /dev/null
-        if [ "${{ inputs.output_exe }}" = "true" ]; then
-          ring2exe ${{ inputs.args }} "$SCRIPT_BASE"
-        else
-          output=$(ring ${{ inputs.args }} "$SCRIPT_BASE")
-          echo "$output"
-          if [[ "$output" == *"Error"* ]]; then
-            exit 1
+  - name: Get Homebrew prefix
+    if: runner.os == 'macOS'
+    shell: bash
+    run: |
+      echo "HOMEBREW_PREFIX=$(brew --prefix)" >> $GITHUB_ENV
+
+  - name: Get macOS Version
+    if: runner.os == 'macOS'
+    shell: bash
+    run: echo "MACOS_VERSION=$(sw_vers -productVersion | cut -d . -f 1)" >> $GITHUB_ENV
+
+  - name: Cache Ring (macOS)
+    if: runner.os == 'macOS'
+    id: cache-ring-macos
+    uses: actions/cache@v3
+    with:
+      path: |
+        ~/ring
+        ${{ env.HOMEBREW_PREFIX }}
+      key: ${{ runner.os }}-${{ env.MACOS_VERSION }}-ring-${{ env.RING_VERSION }}
+
+  - name: Set up Ring (macOS)
+    if: runner.os == 'macOS' && steps.cache-ring-macos.outputs.cache-hit != 'true'
+    shell: bash
+    run: |
+      echo "Cloning Ring..."
+      git clone --depth 1 -q https://github.com/ring-lang/ring $HOME/ring
+      cd $HOME/ring
+
+      # Make the process of building RingQt faster (by running make in parallel)
+      find extensions/ringqt -name "*.sh" -exec sed -i '' 's/\bmake\b/make -j$(sysctl -n hw.ncpu)/g' {} +
+
+      cd $HOME/ring/build
+      echo "Installing dependencies for macOS..."
+      chmod +x installdepmac.sh
+      ./installdepmac.sh > /dev/null 2>&1
+
+      echo "Building Ring..."
+      chmod +x buildclang.sh
+      ./buildclang.sh > /dev/null 2>&1
+
+      echo "Adding Ring to PATH and DYLD_LIBRARY_PATH..."
+      echo "$HOME/ring/bin" >> $GITHUB_PATH
+      export PATH="$HOME/ring/bin:$PATH"
+
+      if [ -z "$DYLD_LIBRARY_PATH" ]; then
+        export DYLD_LIBRARY_PATH="$HOME/ring/lib"
+      else
+        export DYLD_LIBRARY_PATH="$HOME/ring/lib:$DYLD_LIBRARY_PATH"
+      fi
+      echo "DYLD_LIBRARY_PATH set to: $DYLD_LIBRARY_PATH"
+
+
+      echo "Ring setup completed successfully"
+
+  - name: Add Ring to PATH (macOS)
+    if: runner.os == 'macOS'
+    shell: bash
+    run: |
+      echo "$HOME/ring/bin" >> $GITHUB_PATH
+      if [ -z "$DYLD_LIBRARY_PATH" ]; then
+        echo "DYLD_LIBRARY_PATH=$HOME/ring/lib" >> $GITHUB_ENV
+      else
+        echo "DYLD_LIBRARY_PATH=$HOME/ring/lib:$DYLD_LIBRARY_PATH" >> $GITHUB_ENV
+      fi
+
+  - name: Install Ring packages (macOS)
+    if: runner.os == 'macOS' && inputs.ring_packages != ''
+    shell: bash
+    run: |
+      echo "Installing specified Ring packages: ${{ env.RING_PACKAGES }}"
+      # Read the input into an array of words
+      IFS=' ' read -r -a words <<< "${{ env.RING_PACKAGES }}"
+
+      # Reconstruct packages with "from" statements
+      declare -a packages
+      i=0
+      n_words=${#words[@]}
+      while [ $i -lt $n_words ]; do
+          if [ $((i + 2)) -lt $n_words ] && [ "${words[$i+1]}" = "from" ]; then
+              packages+=("${words[$i]} from ${words[$i+2]}")
+              i=$((i + 3))
+          else
+              packages+=("${words[$i]}")
+              i=$((i + 1))
           fi
-        fi
-        popd > /dev/null
+      done
 
-    - name: Build project (Linux)
-      if: runner.os == 'Linux'
-      shell: bash
-      run: |
-          docker run --rm -v "$(pwd):/app" -e INPUT_VERSION="${{ inputs.version }}" -e INPUT_ARGS="${{ inputs.args }}" -e INPUT_RING_PACKAGES="${{ inputs.ring_packages }}" -e INPUT_OUTPUT_EXE="${{ inputs.output_exe }}" -e INPUT_FILE="${{ inputs.file }}" quay.io/ydrag0n/ring:latest
+      # Install the packages
+      for package in "${packages[@]}"; do
+          echo "Installing package: $package"
+          ringpm install $package
+      done
+
+  - name: Set up Ring (Linux)
+    if: runner.os == 'Linux'
+    shell: bash
+    run: |
+      # Use the existing Docker container for Linux
+      docker pull quay.io/ydrag0n/ring:latest
+
+  - name: Build project (Windows)
+    if: runner.os == 'Windows'
+    shell: pwsh
+    run: |
+      $scriptDir = Split-Path -Parent "${{ env.RING_FILE }}"
+      $scriptBase = Split-Path -Leaf "${{ env.RING_FILE }}"
+
+      Push-Location $scriptDir
+      try {
+        if ("${{ env.OUTPUT_EXE }}" -eq "true") {
+          ring2exe ${{ env.RING_ARGS }} $scriptBase
+        } else {
+          $output = ring ${{ env.RING_ARGS }} $scriptBase
+          Write-Output $output
+          if ($output -match "Error") {
+            exit 1
+          }
+        }
+      } finally {
+        Pop-Location
+      }
+
+  - name: Build project (macOS)
+    if: runner.os == 'macOS'
+    shell: bash
+    run: |
+      SCRIPT_DIR=$(dirname "${{ env.RING_FILE }}")
+      SCRIPT_BASE=$(basename "${{ env.RING_FILE }}")
+      pushd "$SCRIPT_DIR" > /dev/null
+      if [ "${{ env.OUTPUT_EXE }}" = "true" ]; then
+        ring2exe ${{ env.RING_ARGS }} "$SCRIPT_BASE"
+      else
+        output=$(ring ${{ env.RING_ARGS }} "$SCRIPT_BASE")
+        echo "$output"
+        if [[ "$output" == *"Error"* ]]; then
+          exit 1
+        fi
+      fi
+      popd > /dev/null
+
+  - name: Build project (Linux)
+    if: runner.os == 'Linux'
+    shell: bash
+    run: |
+      docker run --rm \
+        -v "$(pwd):/app" \
+        -e INPUT_VERSION="${{ env.RING_VERSION }}" \
+        -e INPUT_ARGS="${{ env.RING_ARGS }}" \
+        -e INPUT_RING_PACKAGES="${{ env.RING_PACKAGES }}" \
+        -e INPUT_OUTPUT_EXE="${{ env.OUTPUT_EXE }}" \
+        -e INPUT_FILE="${{ env.RING_FILE }}" \
+        quay.io/ydrag0n/ring:latest

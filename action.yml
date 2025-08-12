@@ -57,13 +57,20 @@ runs:
     if: runner.os == 'Windows' && steps.cache-ring-windows.outputs.cache-hit != 'true'
     shell: pwsh
     run: |
+      $version = "${{ env.RING_VERSION }}"
+
+      if ($version -notmatch '^v\d+\.\d+(\.\d+)?$') {
+          Write-Host "##[error]Invalid Ring version format: '${{ env.RING_VERSION }}'. Only versions in 'vX.YY' format (e.g., v1.23) are supported for Windows."
+          exit 1
+      }
+
       choco install 7zip -y --no-progress > $null 2>&1
 
       $downloadDir = "C:\RingTemp"
+
       New-Item -ItemType Directory -Force -Path $downloadDir > $null
       cd $downloadDir
 
-      $version = "${{ env.RING_VERSION }}"
       $cleanVersion = $version -replace '^v', ''
       $installerUrl = "https://github.com/ring-lang/ring/releases/download/$version/Ring_${cleanVersion}_Windows_64bit.exe"
 

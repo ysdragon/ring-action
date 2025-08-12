@@ -148,5 +148,9 @@ jobs:
           output_exe: "true"
 ```
 
+## TODO
+- [ ] Support FreeBSD
+- [ ] Make the project a JavaScript Action
+
 ## License
 This project is open source and available under the [MIT](https://github.com/ysdragon/ring-action/blob/main/LICENSE) License.

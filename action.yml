@@ -121,7 +121,7 @@ runs:
     run: echo "MACOS_VERSION=$(sw_vers -productVersion | cut -d . -f 1)" >> $GITHUB_ENV
 
   - name: Cache Ring (macOS)
-    if: runner.os == 'macOS'
+    if: runner.os == 'macOS' && env.MACOS_VERSION != '13'
     id: cache-ring-macos
     uses: actions/cache@v3
     with:

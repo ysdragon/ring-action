@@ -48,7 +48,7 @@ A GitHub Action that compiles [Ring](https://ring-lang.net/) Programming Languag
 ### Simple example 
 
 ```yaml
-uses: ysdragon/ring-action@v1.2.1
+uses: ysdragon/ring-action@v1.2.2
 with:
   file: "program.ring"
 ```
@@ -65,7 +65,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Linux executable
-        uses: ysdragon/ring-action@v1.2.1
+        uses: ysdragon/ring-action@v1.2.2
         with:
           file: "program.ring"
           output_exe: "true"
@@ -84,7 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build macOS Intel app
-        uses: ysdragon/ring-action@v1.2.1
+        uses: ysdragon/ring-action@v1.2.2
         with:
           file: "program.ring"
           output_exe: "true"
@@ -102,7 +102,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build macOS Intel app
-        uses: ysdragon/ring-action@v1.2.1
+        uses: ysdragon/ring-action@v1.2.2
         with:
           file: "program.ring"
           output_exe: "true"
@@ -120,7 +120,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Windows x64 executable
-        uses: ysdragon/ring-action@v1.2.1
+        uses: ysdragon/ring-action@v1.2.2
         with:
           file: "program.ring"
           output_exe: "true"
@@ -137,12 +137,12 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - name: Build Ring project
-        uses: ysdragon/ring-action@v1.2.1
+        uses: ysdragon/ring-action@v1.2.2
         with:
           file: "program.ring"
           output_exe: "true"

@@ -21,6 +21,10 @@ inputs:
     description: 'Specify the version of the Ring compiler to use (commit ID, tag, branch, or hash)'
     required: false
     default: 'v1.24'
+  arch:
+    description: 'Target architecture for MSVC compiler on Windows (x64, x86, arm64)'
+    required: false
+    default: 'x64'
 
 branding:
   color: 'blue'
@@ -72,7 +76,13 @@ runs:
       cd $downloadDir
 
       $cleanVersion = $version -replace '^v', ''
-      $installerUrl = "https://github.com/ring-lang/ring/releases/download/$version/Ring_${cleanVersion}_Windows_64bit.exe"
+      $arch = "${{ inputs.arch }}"
+      if ($arch -eq "x86") {
+          $bitness = "32bit"
+      } else {
+          $bitness = "64bit"
+      }
+      $installerUrl = "https://github.com/ring-lang/ring/releases/download/$version/Ring_${cleanVersion}_Windows_${bitness}.exe"
 
       try {
           $ProgressPreference = 'SilentlyContinue'
@@ -115,6 +125,12 @@ runs:
           Write-Host "Installing package: $package"
           & "C:\ring\bin\ringpm" install ($package -split ' ')
       }
+
+  - name: Setup MSVC (Windows)
+    if: runner.os == 'Windows'
+    uses: ilammy/msvc-dev-cmd@v1
+    with:
+      arch: ${{ inputs.arch }}
 
   - name: Get Homebrew prefix
     if: runner.os == 'macOS'

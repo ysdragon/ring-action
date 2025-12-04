@@ -30,7 +30,7 @@ A GitHub Action that compiles [Ring](https://ring-lang.net/) Programming Languag
 | macOS    | Intel (x86_64)   | ✅        | Full support                 |
 | macOS    | Apple Silicon    | ✅        | Full support      |
 | Windows  | x86_64 / amd64   | ✅        | Pre-built binaries only      |
-| Windows  | i386             | ❌        | Not supported                |
+| Windows  | i386 / x86       | ✅        | Pre-built binaries only      |
 | Windows  | arm64            | ❌        | Not supported                |
 
 ## Inputs
@@ -42,6 +42,7 @@ A GitHub Action that compiles [Ring](https://ring-lang.net/) Programming Languag
 | `args` | ❌ | - | Additional arguments to pass to Ring or Ring2EXE |
 | `ring_packages` | ❌ | - | Space-separated list of packages to install from RingPM |
 | `version` | ❌ | `v1.24` | Ring compiler version to use |
+| `arch` | ❌ | `x64` | Target architecture for MSVC compiler on Windows (`x64`, `x86`, `arm64`) |
 
 ## Usage Examples
 
@@ -125,6 +126,25 @@ jobs:
           file: "program.ring"
           output_exe: "true"
           args: "-static"
+```
+
+### Windows (32-bit)
+
+```yaml
+name: Windows x86 Build
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Windows x86 executable
+        uses: ysdragon/ring-action@v1.2.3
+        with:
+          file: "program.ring"
+          output_exe: "true"
+          arch: "x86"
 ```
 
 ### Cross-Platform Build

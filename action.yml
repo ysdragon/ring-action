@@ -25,6 +25,10 @@ inputs:
     description: 'Target architecture for MSVC compiler on Windows (x64, x86, arm64)'
     required: false
     default: 'x64'
+  cache:
+    description: 'Set to `false` to disable caching of the Ring installation'
+    required: false
+    default: 'true'
 
 branding:
   color: 'blue'
@@ -50,7 +54,7 @@ runs:
       "OS_ARCH=$($env:PROCESSOR_ARCHITECTURE)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
   - name: Cache Ring (Windows)
-    if: runner.os == 'Windows'
+    if: runner.os == 'Windows' && inputs.cache == 'true'
     id: cache-ring-windows
     uses: actions/cache@v3
     with:
@@ -58,7 +62,7 @@ runs:
       key: ${{ runner.os }}-${{ env.OS_VERSION }}-${{ env.OS_ARCH }}-ring-${{ env.RING_VERSION }}
 
   - name: Set up Ring (Windows)
-    if: runner.os == 'Windows' && steps.cache-ring-windows.outputs.cache-hit != 'true'
+    if: runner.os == 'Windows' && (inputs.cache != 'true' || steps.cache-ring-windows.outputs.cache-hit != 'true')
     shell: pwsh
     run: |
       $version = "${{ env.RING_VERSION }}"
@@ -146,7 +150,7 @@ runs:
       echo "MACOS_ARCH=$(uname -m)" >> $GITHUB_ENV
 
   - name: Cache Ring (macOS)
-    if: runner.os == 'macOS' && env.MACOS_VERSION != '13'
+    if: runner.os == 'macOS' && env.MACOS_VERSION != '13' && inputs.cache == 'true'
     id: cache-ring-macos
     uses: actions/cache@v3
     with:
@@ -156,7 +160,7 @@ runs:
       key: ${{ runner.os }}-${{ env.MACOS_VERSION }}-${{ env.MACOS_ARCH }}-ring-${{ env.RING_VERSION }}
 
   - name: Set up Ring (macOS)
-    if: runner.os == 'macOS' && steps.cache-ring-macos.outputs.cache-hit != 'true'
+    if: runner.os == 'macOS' && (inputs.cache != 'true' || steps.cache-ring-macos.outputs.cache-hit != 'true')
     shell: bash
     run: |
       echo "Cloning Ring..."

@@ -122,10 +122,12 @@ runs:
     run: |
       echo "HOMEBREW_PREFIX=$(brew --prefix)" >> $GITHUB_ENV
 
-  - name: Get macOS Version
+  - name: Get macOS Version and Arch
     if: runner.os == 'macOS'
     shell: bash
-    run: echo "MACOS_VERSION=$(sw_vers -productVersion | cut -d . -f 1)" >> $GITHUB_ENV
+    run: |
+      echo "MACOS_VERSION=$(sw_vers -productVersion | cut -d . -f 1)" >> $GITHUB_ENV
+      echo "MACOS_ARCH=$(uname -m)" >> $GITHUB_ENV
 
   - name: Cache Ring (macOS)
     if: runner.os == 'macOS' && env.MACOS_VERSION != '13'
@@ -135,7 +137,7 @@ runs:
       path: |
         ~/ring
         ${{ env.HOMEBREW_PREFIX }}
-      key: ${{ runner.os }}-${{ env.MACOS_VERSION }}-ring-${{ env.RING_VERSION }}
+      key: ${{ runner.os }}-${{ env.MACOS_VERSION }}-${{ env.MACOS_ARCH }}-ring-${{ env.RING_VERSION }}
 
   - name: Set up Ring (macOS)
     if: runner.os == 'macOS' && steps.cache-ring-macos.outputs.cache-hit != 'true'

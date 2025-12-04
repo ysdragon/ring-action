@@ -50,7 +50,7 @@ A GitHub Action that compiles [Ring](https://ring-lang.net/) Programming Languag
 ### Simple example 
 
 ```yaml
-uses: ysdragon/ring-action@v1.2.3
+uses: ysdragon/ring-action@v1.3.0
 with:
   file: "program.ring"
 ```
@@ -67,7 +67,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Linux executable
-        uses: ysdragon/ring-action@v1.2.3
+        uses: ysdragon/ring-action@v1.3.0
         with:
           file: "program.ring"
           output_exe: "true"
@@ -86,7 +86,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build macOS Intel app
-        uses: ysdragon/ring-action@v1.2.3
+        uses: ysdragon/ring-action@v1.3.0
         with:
           file: "program.ring"
           output_exe: "true"
@@ -104,7 +104,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build macOS Intel app
-        uses: ysdragon/ring-action@v1.2.3
+        uses: ysdragon/ring-action@v1.3.0
         with:
           file: "program.ring"
           output_exe: "true"
@@ -122,7 +122,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Windows x64 executable
-        uses: ysdragon/ring-action@v1.2.3
+        uses: ysdragon/ring-action@v1.3.0
         with:
           file: "program.ring"
           output_exe: "true"
@@ -141,7 +141,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Windows x86 executable
-        uses: ysdragon/ring-action@v1.2.3
+        uses: ysdragon/ring-action@v1.3.0
         with:
           file: "program.ring"
           output_exe: "true"
@@ -163,7 +163,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Ring project
-        uses: ysdragon/ring-action@v1.2.3
+        uses: ysdragon/ring-action@v1.3.0
         with:
           file: "program.ring"
           output_exe: "true"

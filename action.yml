@@ -59,7 +59,7 @@ runs:
     uses: actions/cache@v3
     with:
       path: C:\ring
-      key: ${{ runner.os }}-${{ env.OS_VERSION }}-${{ env.OS_ARCH }}-ring-${{ env.RING_VERSION }}
+      key: ${{ runner.os }}-${{ env.OS_VERSION }}-${{ inputs.arch }}-ring-${{ env.RING_VERSION }}
 
   - name: Set up Ring (Windows)
     if: runner.os == 'Windows' && (inputs.cache != 'true' || steps.cache-ring-windows.outputs.cache-hit != 'true')

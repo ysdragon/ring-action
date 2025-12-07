@@ -237,7 +237,7 @@ runs:
     shell: bash
     run: |
       # Use the existing Docker container for Linux
-      docker pull quay.io/ydrag0n/ring:latest
+      docker pull ghcr.io/ysdragon/ring:latest
 
   - name: Build project (Windows)
     if: runner.os == 'Windows'

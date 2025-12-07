@@ -5,7 +5,10 @@ author: 'ysdragon'
 inputs:
   file:
     description: 'Path to the Ring source file to build'
-    required: true
+    required: false
+  command:
+    description: 'Command to execute (if file is not specified)'
+    required: false
   output_exe:
     description: 'Set to `true` to generate an executable using Ring2EXE'
     required: false
@@ -42,6 +45,7 @@ runs:
     run: |
       echo "RING_VERSION=${{ inputs.version }}" >> $GITHUB_ENV
       echo "RING_FILE=${{ inputs.file }}" >> $GITHUB_ENV
+      echo "RING_COMMAND=${{ inputs.command }}" >> $GITHUB_ENV
       echo "RING_ARGS=${{ inputs.args }}" >> $GITHUB_ENV
       echo "RING_PACKAGES=${{ inputs.ring_packages }}" >> $GITHUB_ENV
       echo "OUTPUT_EXE=${{ inputs.output_exe }}" >> $GITHUB_ENV
@@ -243,51 +247,69 @@ runs:
     if: runner.os == 'Windows'
     shell: pwsh
     run: |
-      $scriptDir = Split-Path -Parent "${{ env.RING_FILE }}"
-      $scriptBase = Split-Path -Leaf "${{ env.RING_FILE }}"
+      if (-not [string]::IsNullOrEmpty($env:RING_FILE)) {
+        $scriptDir = Split-Path -Parent "${{ env.RING_FILE }}"
+        $scriptBase = Split-Path -Leaf "${{ env.RING_FILE }}"
 
-      Push-Location $scriptDir
-      try {
-        if ("${{ env.OUTPUT_EXE }}" -eq "true") {
-          ring2exe ${{ env.RING_ARGS }} $scriptBase
-        } else {
-          $output = ring ${{ env.RING_ARGS }} $scriptBase
-          Write-Output $output
-          if ($output -match "Error") {
-            exit 1
+        Push-Location $scriptDir
+        try {
+          if ("${{ env.OUTPUT_EXE }}" -eq "true") {
+            ring2exe ${{ env.RING_ARGS }} $scriptBase
+          } else {
+            $output = ring ${{ env.RING_ARGS }} $scriptBase
+            Write-Output $output
+            if ($output -match "Error") {
+              exit 1
+            }
           }
+        } finally {
+          Pop-Location
         }
-      } finally {
-        Pop-Location
+      } elseif (-not [string]::IsNullOrEmpty($env:RING_COMMAND)) {
+        Invoke-Expression $env:RING_COMMAND
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       }
 
   - name: Build project (macOS)
     if: runner.os == 'macOS'
     shell: bash
     run: |
-      SCRIPT_DIR=$(dirname "${{ env.RING_FILE }}")
-      SCRIPT_BASE=$(basename "${{ env.RING_FILE }}")
-      pushd "$SCRIPT_DIR" > /dev/null
-      if [ "${{ env.OUTPUT_EXE }}" = "true" ]; then
-        ring2exe ${{ env.RING_ARGS }} "$SCRIPT_BASE"
-      else
-        output=$(ring ${{ env.RING_ARGS }} "$SCRIPT_BASE")
-        echo "$output"
-        if [[ "$output" == *"Error"* ]]; then
-          exit 1
+      if [ -n "${{ env.RING_FILE }}" ]; then
+        SCRIPT_DIR=$(dirname "${{ env.RING_FILE }}")
+        SCRIPT_BASE=$(basename "${{ env.RING_FILE }}")
+        pushd "$SCRIPT_DIR" > /dev/null
+        if [ "${{ env.OUTPUT_EXE }}" = "true" ]; then
+          ring2exe ${{ env.RING_ARGS }} "$SCRIPT_BASE"
+        else
+          output=$(ring ${{ env.RING_ARGS }} "$SCRIPT_BASE")
+          echo "$output"
+          if [[ "$output" == *"Error"* ]]; then
+            exit 1
+          fi
         fi
+        popd > /dev/null
+      elif [ -n "${{ env.RING_COMMAND }}" ]; then
+        eval "${{ env.RING_COMMAND }}"
       fi
-      popd > /dev/null
 
   - name: Build project (Linux)
     if: runner.os == 'Linux'
     shell: bash
     run: |
-      docker run --rm \
-        -v "$(pwd):/app" \
-        -e RING_VERSION="${{ env.RING_VERSION }}" \
-        -e RING_ARGS="${{ env.RING_ARGS }}" \
-        -e RING_PACKAGES="${{ env.RING_PACKAGES }}" \
-        -e RING_OUTPUT_EXE="${{ env.OUTPUT_EXE }}" \
-        -e RING_FILE="${{ env.RING_FILE }}" \
-        ghcr.io/ysdragon/ring:latest
+      if [ -n "${{ env.RING_FILE }}" ]; then
+        docker run --rm \
+          -v "$(pwd):/app" \
+          -e RING_VERSION="${{ env.RING_VERSION }}" \
+          -e RING_ARGS="${{ env.RING_ARGS }}" \
+          -e RING_PACKAGES="${{ env.RING_PACKAGES }}" \
+          -e RING_OUTPUT_EXE="${{ env.OUTPUT_EXE }}" \
+          -e RING_FILE="${{ env.RING_FILE }}" \
+          ghcr.io/ysdragon/ring:latest
+      elif [ -n "${{ env.RING_COMMAND }}" ]; then
+        docker run --rm \
+          -v "$(pwd):/app" \
+          -e RING_VERSION="${{ env.RING_VERSION }}" \
+          -e RING_PACKAGES="${{ env.RING_PACKAGES }}" \
+          ghcr.io/ysdragon/ring:latest \
+          bash -c "${{ env.RING_COMMAND }}"
+      fi

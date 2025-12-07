@@ -37,7 +37,8 @@ A GitHub Action that compiles [Ring](https://ring-lang.net/) Programming Languag
 
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
-| `file` | ✅ | - | Path to the Ring source file to build |
+| `file` | ❌ | - | Path to the Ring source file to build |
+| `command` | ❌ | - | Custom command to execute |
 | `output_exe` | ❌ | `false` | Set to `true` to generate an executable using Ring2EXE |
 | `args` | ❌ | - | Additional arguments to pass to Ring or Ring2EXE |
 | `ring_packages` | ❌ | - | Space-separated list of packages to install from RingPM |
@@ -48,14 +49,22 @@ A GitHub Action that compiles [Ring](https://ring-lang.net/) Programming Languag
 ## Usage Examples
 
 ### Simple example 
+ 
+ ```yaml
+ uses: ysdragon/ring-action@v1.3.0
+ with:
+   file: "program.ring"
+ ```
+
+### Execution command example
 
 ```yaml
 uses: ysdragon/ring-action@v1.3.0
 with:
-  file: "program.ring"
+  command: "ring program.ring"
 ```
-
-### Linux
+ 
+ ### Linux
 
 ```yaml
 name: Linux Build

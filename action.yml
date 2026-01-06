@@ -23,7 +23,7 @@ inputs:
   version:
     description: 'Specify the version of the Ring compiler to use (commit ID, tag, branch, or hash)'
     required: false
-    default: 'v1.24'
+    default: 'v1.25'
   arch:
     description: 'Target architecture for MSVC compiler on Windows (x64, x86, arm64)'
     required: false

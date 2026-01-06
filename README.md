@@ -43,7 +43,7 @@ A GitHub Action that compiles [Ring](https://ring-lang.net/) Programming Languag
 | `output_exe` | ❌ | `false` | Set to `true` to generate an executable using Ring2EXE |
 | `args` | ❌ | - | Additional arguments to pass to Ring or Ring2EXE |
 | `ring_packages` | ❌ | - | Space-separated list of packages to install from RingPM |
-| `version` | ❌ | `v1.24` | Ring compiler version to use |
+| `version` | ❌ | `v1.25` | Ring compiler version to use |
 | `arch` | ❌ | `x64` | Target architecture for MSVC compiler on Windows (`x64`, `x86`, `arm64`) |
 | `cache` | ❌ | `true` | Set to `false` to disable caching of the Ring installation |
 

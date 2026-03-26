@@ -1,0 +1,21 @@
+name: Sync v1 branch
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 
+
+      - name: Force update v1 branch
+        run: git push origin HEAD:refs/heads/v1 --force

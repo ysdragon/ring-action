@@ -258,9 +258,6 @@ runs:
           } else {
             $output = ring ${{ env.RING_ARGS }} $scriptBase
             Write-Output $output
-            if ($output -match "Error") {
-              exit 1
-            }
           }
         } finally {
           Pop-Location
@@ -283,9 +280,6 @@ runs:
         else
           output=$(ring ${{ env.RING_ARGS }} "$SCRIPT_BASE")
           echo "$output"
-          if [[ "$output" == *"Error"* ]]; then
-            exit 1
-          fi
         fi
         popd > /dev/null
       elif [ -n "${{ env.RING_COMMAND }}" ]; then

@@ -256,8 +256,8 @@ runs:
           if ("${{ env.OUTPUT_EXE }}" -eq "true") {
             ring2exe ${{ env.RING_ARGS }} $scriptBase
           } else {
-            $output = ring ${{ env.RING_ARGS }} $scriptBase
-            Write-Output $output
+            ring ${{ env.RING_ARGS }} $scriptBase
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
         } finally {
           Pop-Location
@@ -278,8 +278,7 @@ runs:
         if [ "${{ env.OUTPUT_EXE }}" = "true" ]; then
           ring2exe ${{ env.RING_ARGS }} "$SCRIPT_BASE"
         else
-          output=$(ring ${{ env.RING_ARGS }} "$SCRIPT_BASE")
-          echo "$output"
+          ring ${{ env.RING_ARGS }} "$SCRIPT_BASE"
         fi
         popd > /dev/null
       elif [ -n "${{ env.RING_COMMAND }}" ]; then
